@@ -718,7 +718,7 @@ body {
       </div>
     </div>
     <!-- nav -->
-    <div style="display:flex;background:#fff;border-bottom:1px solid #E5E2F0;padding:0 16px;overflow-x:auto">
+    <div style="display:flex;background:#fff;border-bottom:1px solid #E5E2F0;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
       <button class="anb on" onclick="atab('emp',this)">従業員</button>
       <button class="anb" onclick="atab('family',this)">家族</button>
       <button class="anb" onclick="atab('bday',this)">誕生日</button>
@@ -743,7 +743,8 @@ body {
               <button class="abtn abtn-p abtn-sm" onclick="openEmpForm(null)">＋ 新規登録</button>
             </div>
           </div>
-          <table><thead><tr><th>氏名</th><th>携帯電話</th><th>住所</th><th>入社日</th><th>雇用</th><th>有給残</th><th></th></tr></thead><tbody id="emp-list"></tbody></table>
+          <table class="sp-table"><thead><tr><th>氏名</th><th>携帯電話</th><th>住所</th><th>入社日</th><th>雇用</th><th>有給残</th><th></th></tr></thead><tbody id="emp-list"></tbody></table>
+          <div class="sp-cards" id="emp-cards"></div>
         </div>
         <div id="emp-form" class="acard" style="display:none">
           <div class="act" id="ef-title">従業員登録</div>
@@ -776,7 +777,7 @@ body {
       <div id="asec-bday" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">今後の誕生日</div><select id="bday-range" style="max-width:130px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderBday()"><option value="30">30日以内</option><option value="60">60日以内</option><option value="90" selected>90日以内</option><option value="180">180日以内</option><option value="365">1年以内</option></select></div><div id="bday-list"></div></div><div class="acard"><div class="act">誕生日一覧</div><table><thead><tr><th>氏名</th><th>続柄</th><th>生年月日</th><th>年齢</th><th>次の誕生日</th><th>あと</th></tr></thead><tbody id="bday-all"></tbody></table></div></div>
       <div id="asec-school" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">学校イベント</div><div style="display:flex;gap:6px"><select id="sc-emp-sel" style="max-width:160px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderSchool()"><option value="">全員</option></select><select id="sc-filter" style="max-width:120px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderSchool()"><option value="all">すべて</option><option value="upcoming">今後1年</option><option value="2025">2025年</option><option value="2026">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option></select></div></div><table><thead><tr><th>イベント</th><th>年月</th><th>従業員</th><th>お子様</th><th>年齢</th></tr></thead><tbody id="sc-table"></tbody></table></div><div class="acard"><div class="act">今後6ヶ月のイベント</div><div id="sc-upcoming"></div></div></div>
       <div id="asec-att" class="asec">
-        <div class="acard"><div class="act">本日の出勤状況</div><div id="hol-notice2"></div><table><thead><tr><th>氏名</th><th>雇用</th><th>出勤</th><th>休憩</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody id="att-list"></tbody></table></div>
+        <div class="acard"><div class="act">本日の出勤状況</div><div id="hol-notice2"></div><table class="sp-table"><thead><tr><th>氏名</th><th>雇用</th><th>出勤</th><th>休憩</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody id="att-list"></tbody></table><div class="sp-cards" id="att-cards"></div></div>
       </div>
       <div id="asec-history" class="asec">
         <div class="acard">
@@ -787,7 +788,7 @@ body {
               <input type="month" id="hist-month" style="font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderHistory()">
             </div>
           </div>
-          <div id="hist-table-wrap"></div>
+          <div id="hist-table-wrap" class="hist-wrap"></div>
         </div>
       </div>
       <div id="asec-leave" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">休暇管理</div><select id="lv-emp-sel" style="max-width:200px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderLeave()"><option value="">-- 従業員を選択 --</option></select></div><div id="lv-info" style="display:none"><div class="act" style="margin-bottom:6px">残日数サマリー</div><div class="g4" style="margin-bottom:12px" id="lv-metrics"></div><div class="adiv"></div><div class="act">休暇申請</div><div style="margin-bottom:10px"><div style="font-size:11px;color:#8A8A98;margin-bottom:6px;font-weight:600">休暇の種類</div><div class="lt-grid" id="leave-type-grid"></div></div><div class="g2"><div class="fr"><label>開始日</label><input type="date" id="lv-start"></div><div class="fr"><label>終了日</label><input type="date" id="lv-end"></div></div><div id="lv-subtype-area" style="display:none"><div class="fr"><label id="lv-subtype-lbl">種別</label><select id="lv-subtype"></select></div></div><div id="lv-holiday-ref-area" style="display:none"><div class="fr"><label>振替元の休日出勤日</label><input type="date" id="lv-holiday-ref"></div></div><div class="fr"><label>理由・メモ</label><input id="lv-reason" placeholder="任意"></div><button class="abtn abtn-p abtn-sm" onclick="applyLeave()">申請する</button><div id="lv-msg"></div><div class="adiv"></div><div class="act">有給付与履歴</div><table style="margin-bottom:12px"><thead><tr><th>付与日</th><th>勤続期間</th><th>付与日数</th></tr></thead><tbody id="lv-grant-table"></tbody></table><div class="adiv"></div><div class="act">休暇取得履歴</div><table><thead><tr><th>日付</th><th>種類</th><th>詳細</th><th>日数</th><th>理由</th></tr></thead><tbody id="lv-hist"></tbody></table></div></div></div>
@@ -909,6 +910,30 @@ tr:last-child td{border-bottom:none}
 .tl-it{flex:0 0 auto;text-align:center;padding:5px 8px;border-right:1px solid #E5E2F0;min-width:74px}
 .tl-it:last-child{border-right:none}
 .tl-e{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;display:inline-block;margin-top:2px}
+
+/* ===== 管理画面スマホ対応 ===== */
+@media (max-width: 600px) {
+  .g2{grid-template-columns:1fr!important}
+  .g4{grid-template-columns:1fr 1fr!important}
+  .acard{padding:14px 12px!important}
+  /* テーブルをカード表示に切替 */
+  .sp-table{display:none!important}
+  .sp-cards{display:block!important}
+}
+@media (min-width: 601px) {
+  .sp-table{display:table!important}
+  .sp-cards{display:none!important}
+}
+/* スマホカード共通 */
+.sp-cards{display:none}
+.emp-card-item{border:1px solid #E5E2F0;border-radius:14px;padding:14px;margin-bottom:10px;background:#fff}
+.emp-card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.emp-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.att-card-item{border:1px solid #E5E2F0;border-radius:14px;padding:12px 14px;margin-bottom:8px;background:#fff}
+.att-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.att-card-cell{background:#F7F7FB;border-radius:8px;padding:6px 10px}
+.att-card-lbl{font-size:10px;color:#8A8A98;font-weight:700;margin-bottom:2px}
+.att-card-val{font-size:13px;font-weight:700;color:#1F1F29}
 </style>
 
 <script>
@@ -1811,7 +1836,61 @@ function syncAdminSels(){['fam-sel','sc-emp-sel','lv-emp-sel','hist-emp-sel'].fo
 const hm=document.getElementById('hist-month');if(hm&&!hm.value){const n=new Date();hm.value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}}
 function togglePart(){document.getElementById('part-area').style.display=document.getElementById('ef-type').value==='パート・アルバイト'?'block':'none';}
 
-function renderEmpList(){const q=(document.getElementById('emp-search').value||'').toLowerCase();const tb=document.getElementById('emp-list');tb.innerHTML='';const f=emps.filter(e=>!q||e.name.includes(q)||e.kana.includes(q));f.forEach(e=>{const granted=curGranted(e.joinDate);const used=calcUsed(e.id,'annual');const rem=granted-used;const addr=[e.pref,e.city].filter(Boolean).join('');tb.innerHTML+=`<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:10px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${e.name.slice(-2)}</div><div><div style="font-weight:700;font-size:12px">${e.name}</div><div style="font-size:10px;color:#8A8A98">${e.kana}</div></div></div></td><td style="font-size:11px">${e.mobile||'-'}</td><td style="font-size:11px">${addr||'-'}</td><td style="font-size:11px">${e.joinDate}</td><td><span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span></td><td><span style="font-weight:700;color:${rem<=3?'#C43636':'#5B4CC4'}">${rem}日</span></td><td><button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button></td></tr>`;});if(!f.length)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8A8A98">該当なし</td></tr>';}
+function renderEmpList(){
+  const q=(document.getElementById('emp-search').value||'').toLowerCase();
+  const tb=document.getElementById('emp-list');
+  const cards=document.getElementById('emp-cards');
+  tb.innerHTML='';cards.innerHTML='';
+  const f=emps.filter(e=>!q||e.name.includes(q)||e.kana.includes(q));
+  f.forEach(e=>{
+    const granted=curGranted(e.joinDate);
+    const used=calcUsed(e.id,'annual');
+    const rem=granted-used;
+    const addr=[e.pref,e.city].filter(Boolean).join('');
+    const typeBadge=`<span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span>`;
+    const remColor=rem<=3?'#C43636':'#5B4CC4';
+    // テーブル行
+    tb.innerHTML+=`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="width:30px;height:30px;border-radius:10px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${e.name.slice(-2)}</div>
+        <div><div style="font-weight:700;font-size:12px">${e.name}</div><div style="font-size:10px;color:#8A8A98">${e.kana}</div></div>
+      </div></td>
+      <td style="font-size:11px">${e.mobile||'-'}</td>
+      <td style="font-size:11px">${addr||'-'}</td>
+      <td style="font-size:11px">${e.joinDate}</td>
+      <td>${typeBadge}</td>
+      <td><span style="font-weight:700;color:${remColor}">${rem}日</span></td>
+      <td><button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button></td>
+    </tr>`;
+    // スマホカード
+    cards.innerHTML+=`<div class="emp-card-item">
+      <div class="emp-card-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:12px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">${e.name.slice(-2)}</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#1F1F29">${e.name}</div>
+            <div style="font-size:12px;color:#8A8A98">${e.kana}</div>
+          </div>
+        </div>
+        <button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button>
+      </div>
+      <div class="emp-card-meta">
+        ${typeBadge}
+        <span style="font-size:12px;color:#8A8A98">${e.dept||''}</span>
+        <span style="font-size:12px;font-weight:700;color:${remColor}">有給残 ${rem}日</span>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#8A8A98;display:flex;flex-wrap:wrap;gap:10px">
+        ${e.mobile?`<span>📞 ${e.mobile}</span>`:''}
+        ${addr?`<span>📍 ${addr}</span>`:''}
+        <span>入社 ${e.joinDate}</span>
+      </div>
+    </div>`;
+  });
+  if(!f.length){
+    tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8A8A98">該当なし</td></tr>';
+    cards.innerHTML='<p style="color:#8A8A98;font-size:13px;text-align:center;padding:16px">該当なし</p>';
+  }
+}
 
 function openEmpForm(id){editEmpId=id;document.getElementById('ef-title').textContent=id?'従業員情報編集':'新規従業員登録';document.getElementById('ef-del').style.display=id?'block':'none';document.getElementById('emp-detail').style.display='none';if(id){const e=emps.find(x=>x.id===id);['name','kana','dept','mobile','ename','ephone','zip','city','addr','pin'].forEach(f=>{document.getElementById('ef-'+f).value=e[f==='name'?'name':f==='kana'?'kana':f]==='dept'?e.dept:e[f]||'';});document.getElementById('ef-name').value=e.name;document.getElementById('ef-kana').value=e.kana||'';document.getElementById('ef-birth').value=e.birth||'';document.getElementById('ef-join').value=e.joinDate;document.getElementById('ef-dept').value=e.dept||'';document.getElementById('ef-type').value=e.type;document.getElementById('ef-start').value=e.start;document.getElementById('ef-end').value=e.end;document.getElementById('ef-break').value=e.brk;document.getElementById('ef-mobile').value=e.mobile||'';document.getElementById('ef-ename').value=e.ename||'';document.getElementById('ef-ephone').value=e.ephone||'';document.getElementById('ef-zip').value=e.zip||'';document.getElementById('ef-pref').value=e.pref||'';document.getElementById('ef-city').value=e.city||'';document.getElementById('ef-addr').value=e.addr||'';document.getElementById('ef-pin').value=e.pin||'';}else{['ef-name','ef-kana','ef-dept','ef-mobile','ef-ename','ef-ephone','ef-zip','ef-city','ef-addr','ef-pin'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-birth').value='';document.getElementById('ef-join').value=TODAYSTR;document.getElementById('ef-type').value='正社員';document.getElementById('ef-pref').value='';document.getElementById('ef-start').value='09:00';document.getElementById('ef-end').value='17:30';document.getElementById('ef-break').value=0;}togglePart();document.getElementById('emp-form').style.display='block';document.getElementById('emp-form').scrollIntoView({behavior:'smooth',block:'nearest'});}
 function closeEmpForm(){document.getElementById('emp-form').style.display='none';}
@@ -1832,39 +1911,74 @@ function sStage(child){const evs=sEvs(child);for(let i=0;i<evs.length;i++){const
 function ageAt(birth,evDate){const b=new Date(birth+'T00:00:00');const e=new Date(evDate+'T00:00:00');let a=e.getFullYear()-b.getFullYear();if(e.getMonth()<b.getMonth()||(e.getMonth()===b.getMonth()&&e.getDate()<b.getDate()))a--;return a;}
 function renderSchool(){const empId=document.getElementById('sc-emp-sel').value;const filter=document.getElementById('sc-filter').value;const in1y=new Date(TODAY);in1y.setFullYear(in1y.getFullYear()+1);const in1yS=in1y.toISOString().split('T')[0];let rows=[];emps.forEach(emp=>{if(empId&&emp.id!=empId)return;(children[emp.id]||[]).forEach(ch=>{sEvs(ch).forEach(ev=>rows.push({emp,ch,ev}));});});rows.sort((a,b)=>a.ev.date.localeCompare(b.ev.date));if(filter==='upcoming')rows=rows.filter(r=>r.ev.date>=TODAYSTR&&r.ev.date<=in1yS);else if(filter!=='all')rows=rows.filter(r=>r.ev.year===parseInt(filter));const tb=document.getElementById('sc-table');tb.innerHTML='';if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#8A8A98">該当なし</td></tr>';return;}rows.forEach(({emp,ch,ev})=>{const past=ev.date<TODAYSTR;const near=!past&&ev.date<=in1yS;tb.innerHTML+=`<tr style="${past?'opacity:.5':''}"><td><span class="abdg abdg-p">${ev.label}</span>${near?' ★':''}</td><td style="font-size:11px">${ev.year}/${ev.month}</td><td style="font-size:11px">${emp.name}</td><td style="font-size:11px">${ch.name||'お子様'}</td><td style="font-size:11px;color:#8A8A98">${ageAt(ch.birth,ev.date)}歳</td></tr>`;});const ul=document.getElementById('sc-upcoming');ul.innerHTML='';const up=rows.filter(r=>{const d=(new Date(r.ev.date)-TODAY)/864e5;return d>=0&&d<=180;});if(!up.length){ul.innerHTML='<p style="font-size:12px;color:#8A8A98">今後6ヶ月のイベントはありません</p>';return;}up.slice(0,8).forEach(({emp,ch,ev})=>{const diff=Math.round((new Date(ev.date)-TODAY)/864e5);ul.innerHTML+=`<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #F0EEF8"><span class="abdg abdg-p">${ev.label}</span><span style="font-size:11px;flex:1">${emp.name} · ${ch.name||'お子様'}</span><span style="font-size:11px;color:#8A8A98">${ev.year}年${ev.month}月 <span style="color:#E07C2A">${diff}日後</span></span></div>`;});}
 
-function renderAtt(){const hol=isHol(TODAYSTR);if(hol)document.getElementById('hol-notice2').innerHTML=`<div class="al al-w" style="margin-bottom:8px">本日は${holLbl(TODAYSTR)}（定休日）です</div>`;const tb=document.getElementById('att-list');if(!tb)return;tb.innerHTML='';emps.forEach(e=>{const rec=attendance[`${e.id}_${TODAYSTR}`]||{};const status=getAttendanceStatus(e.id);const statusMap={not_started:'<span class="abdg abdg-gr">未打刻</span>',working:'<span class="abdg abdg-g">勤務中</span>',on_break:'<span class="abdg abdg-o">休憩中</span>',finished:'<span class="abdg abdg-p">退勤済</span>'};const mins=rec.in&&rec.out?calcWM(e,rec.in,rec.out,rec.breakStart,rec.breakEnd):0;tb.innerHTML+=`<tr><td>${e.name}</td><td><span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span></td><td>${rec.in||'-'}</td><td>${rec.breakStart||'-'}</td><td>${rec.out||'-'}</td><td>${mins>0?fmtM(mins):'--'}</td><td>${hol?'<span class="abdg abdg-gr">休日</span>':statusMap[status]||''}</td></tr>`;});}
+function renderAtt(){
+  const hol=isHol(TODAYSTR);
+  const notice=document.getElementById('hol-notice2');
+  if(notice) notice.innerHTML=hol?`<div class="al al-w" style="margin-bottom:8px">本日は${holLbl(TODAYSTR)}（定休日）です</div>`:'';
+  const tb=document.getElementById('att-list');
+  const cards=document.getElementById('att-cards');
+  if(!tb)return;
+  tb.innerHTML='';if(cards)cards.innerHTML='';
+  const statusMap={not_started:'<span class="abdg abdg-gr">未打刻</span>',working:'<span class="abdg abdg-g">勤務中</span>',on_break:'<span class="abdg abdg-o">休憩中</span>',finished:'<span class="abdg abdg-p">退勤済</span>'};
+  emps.forEach(e=>{
+    const rec=attendance[`${e.id}_${TODAYSTR}`]||{};
+    const status=getAttendanceStatus(e.id);
+    const stBadge=hol?'<span class="abdg abdg-gr">休日</span>':statusMap[status]||'';
+    const mins=rec.in&&rec.out?calcWM(e,rec.in,rec.out,rec.breakStart,rec.breakEnd):0;
+    const typeBadge=`<span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span>`;
+    tb.innerHTML+=`<tr><td>${e.name}</td><td>${typeBadge}</td><td>${rec.in||'-'}</td><td>${rec.breakStart||'-'}</td><td>${rec.out||'-'}</td><td>${mins>0?fmtM(mins):'--'}</td><td>${stBadge}</td></tr>`;
+    if(cards) cards.innerHTML+=`<div class="att-card-item">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:34px;height:34px;border-radius:10px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">${e.name.slice(-2)}</div>
+          <div>
+            <div style="font-size:14px;font-weight:800">${e.name}</div>
+            <div style="font-size:11px;color:#8A8A98">${e.dept||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">${typeBadge}${stBadge}</div>
+      </div>
+      <div class="att-card-grid">
+        <div class="att-card-cell"><div class="att-card-lbl">出勤</div><div class="att-card-val">${rec.in||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">休憩開始</div><div class="att-card-val">${rec.breakStart||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">退勤</div><div class="att-card-val">${rec.out||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">実働</div><div class="att-card-val">${mins>0?fmtM(mins):'--'}</div></div>
+      </div>
+    </div>`;
+  });
+}
 
 function renderHistory(){
   const empFilter=document.getElementById('hist-emp-sel').value;
   const monthVal=document.getElementById('hist-month').value;
   const wrap=document.getElementById('hist-table-wrap');
   const dl=['日','月','火','水','木','金','土'];
-  // collect matching keys
   const rows=[];
   Object.keys(attendance).forEach(k=>{
     const[eid,date]=k.split('_');
     if(monthVal&&!date.startsWith(monthVal))return;
     if(empFilter&&eid!=empFilter)return;
-    const e=emps.find(x=>x.id==eid);
-    if(!e)return;
-    const rec=attendance[k];
-    rows.push({e,date,rec});
+    const e=emps.find(x=>x.id==eid);if(!e)return;
+    rows.push({e,date,rec:attendance[k]});
   });
-  // also include today if no records
   rows.sort((a,b)=>b.date.localeCompare(a.date)||a.e.name.localeCompare(b.e.name));
   if(!rows.length){wrap.innerHTML='<p style="color:#8A8A98;font-size:13px;padding:8px 0">打刻記録がありません</p>';return;}
-  let html='<table><thead><tr><th>日付</th><th>氏名</th><th>出勤</th><th>休憩開始</th><th>休憩終了</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody>';
+
+  // PC: table / SP: cards
+  let tableHtml='<table class="sp-table"><thead><tr><th>日付</th><th>氏名</th><th>出勤</th><th>休憩開始</th><th>休憩終了</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody>';
+  let cardsHtml='<div class="sp-cards">';
   rows.forEach(({e,date,rec})=>{
     const d=new Date(date+'T00:00:00');
     const hol=isHol(date);
     const mins=rec.in&&rec.out?calcWM(e,rec.in,rec.out,rec.breakStart,rec.breakEnd):0;
+    const dayLabel=`${date.slice(5).replace('-','/')}（${dl[d.getDay()]}）`;
     let stBadge='<span class="abdg abdg-gr">未打刻</span>';
     if(hol)stBadge='<span class="abdg abdg-gr">休日</span>';
     else if(rec.out)stBadge='<span class="abdg abdg-p">退勤済</span>';
     else if(rec.breakStart&&!rec.breakEnd)stBadge='<span class="abdg abdg-o">休憩中</span>';
     else if(rec.in)stBadge='<span class="abdg abdg-g">勤務中</span>';
-    html+=`<tr>
-      <td style="font-size:11px;white-space:nowrap">${date.slice(5).replace('-','/')}（${dl[d.getDay()]}）</td>
+    tableHtml+=`<tr>
+      <td style="font-size:11px;white-space:nowrap">${dayLabel}</td>
       <td style="font-size:12px;font-weight:700">${e.name}</td>
       <td style="font-size:11px">${rec.in||'-'}</td>
       <td style="font-size:11px">${rec.breakStart||'-'}</td>
@@ -1873,9 +1987,25 @@ function renderHistory(){
       <td style="font-size:11px">${mins>0?fmtM(mins):'--'}</td>
       <td>${stBadge}</td>
     </tr>`;
+    cardsHtml+=`<div class="att-card-item">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:#1F1F29">${e.name}</div>
+          <div style="font-size:12px;color:#8A8A98">${dayLabel}</div>
+        </div>
+        ${stBadge}
+      </div>
+      <div class="att-card-grid">
+        <div class="att-card-cell"><div class="att-card-lbl">出勤</div><div class="att-card-val">${rec.in||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">休憩開始</div><div class="att-card-val">${rec.breakStart||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">退勤</div><div class="att-card-val">${rec.out||'--:--'}</div></div>
+        <div class="att-card-cell"><div class="att-card-lbl">実働</div><div class="att-card-val">${mins>0?fmtM(mins):'--'}</div></div>
+      </div>
+    </div>`;
   });
-  html+='</tbody></table>';
-  wrap.innerHTML=html;
+  tableHtml+='</tbody></table>';
+  cardsHtml+='</div>';
+  wrap.innerHTML=tableHtml+cardsHtml;
 }
 
 let selLCatA='annual';
