@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>スタッフ打刻</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --bg: #F7F7FB;
+  --main: #5B4CC4;
+  --main-dark: #4538A8;
+  --main-sub: #EEEAFE;
+  --main-sub2: #DDD9F5;
+  --text: #1F1F29;
+  --text-sub: #8A8A98;
+  --border: #E5E2F0;
+  --card: #FFFFFF;
+  --radius: 24px;
+  --btn-radius: 18px;
+  --shadow: 0 2px 16px rgba(91,76,196,0.07);
+  --shadow-md: 0 4px 24px rgba(91,76,196,0.12);
+  --gap: 24px;
+  --green: #1B9E6E;
+  --green-light: #E3F7F0;
+  --orange: #E07C2A;
+  --orange-light: #FEF0E3;
+  --red: #C43636;
+  --red-light: #FDEAEA;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ===== SCREEN SYSTEM ===== */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: var(--gap);
+}
+.card-sm { padding: 16px 20px; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: var(--btn-radius);
+  font-family: inherit; font-weight: 700; cursor: pointer;
+  transition: all 0.18s; user-select: none;
+  font-size: 17px; padding: 18px 28px; width: 100%;
+  letter-spacing: 0.01em;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--main); color: #fff; box-shadow: 0 4px 20px rgba(91,76,196,0.3); }
+.btn-primary:hover { background: var(--main-dark); }
+.btn-green { background: var(--green); color: #fff; box-shadow: 0 4px 20px rgba(27,158,110,0.25); }
+.btn-green:hover { background: #167d58; }
+.btn-orange { background: var(--orange); color: #fff; box-shadow: 0 4px 20px rgba(224,124,42,0.25); }
+.btn-orange:hover { background: #c06c20; }
+.btn-outline {
+  background: transparent; color: var(--main);
+  border: 2px solid var(--border); font-size: 15px; padding: 14px 20px;
+  box-shadow: none;
+}
+.btn-outline:hover { border-color: var(--main); background: var(--main-sub); }
+.btn-ghost { background: transparent; border: none; color: var(--text-sub); font-size: 14px; padding: 10px 16px; font-weight: 500; width: auto; }
+.btn:disabled { opacity: 0.5; pointer-events: none; }
+.btn-lg { font-size: 20px; padding: 22px 32px; }
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 14px; border-radius: 99px; font-size: 13px; font-weight: 700;
+}
+.badge-purple { background: var(--main-sub); color: var(--main); }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-orange { background: var(--orange-light); color: var(--orange); }
+.badge-gray { background: #F0F0F5; color: var(--text-sub); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ===== TOAST ===== */
+.toast-wrap { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
+.toast {
+  background: var(--text); color: #fff; border-radius: 14px;
+  padding: 12px 22px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  opacity: 0; transform: translateY(-12px); transition: all 0.25s;
+  white-space: nowrap; display: flex; align-items: center; gap: 8px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+
+/* ===== DIVIDER ===== */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ===== LABEL ===== */
+.label { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+
+/* ===== INPUT ===== */
+.input-wrap select {
+  width: 100%; font-family: inherit; font-size: 18px; font-weight: 600;
+  border: 2px solid var(--border); border-radius: 16px; padding: 16px 20px;
+  background: var(--card); color: var(--text); outline: none;
+  appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238A8A98' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center;
+  transition: border-color 0.15s;
+}
+.input-wrap select:focus { border-color: var(--main); }
+
+/* ==================================================
+   SCREEN 1: MODE SELECT
+   ================================================== */
+#screen-mode {
+  background: var(--bg);
+  align-items: center; justify-content: center;
+  padding: var(--gap);
+}
+.mode-inner { width: 100%; max-width: 420px; }
+.mode-header { text-align: center; margin-bottom: 36px; }
+.mode-icon {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: var(--main); display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; box-shadow: 0 8px 24px rgba(91,76,196,0.3);
+}
+.mode-icon svg { width: 38px; height: 38px; color: #fff; }
+.mode-title { font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+.mode-sub { font-size: 14px; color: var(--text-sub); }
+.mode-main-card {
+  background: var(--main); border-radius: 28px; padding: 32px 28px;
+  box-shadow: 0 8px 32px rgba(91,76,196,0.3); margin-bottom: 14px; cursor: pointer;
+  transition: all 0.2s; border: none; width: 100%; text-align: left;
+  font-family: inherit;
+}
+.mode-main-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(91,76,196,0.4); }
+.mode-main-card:active { transform: scale(0.99); }
+.mode-main-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.mode-main-title { font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+.mode-main-desc { font-size: 14px; color: rgba(255,255,255,0.75); margin-bottom: 24px; }
+.mode-main-cta {
+  background: #fff; color: var(--main); border-radius: 14px;
+  padding: 14px 24px; font-size: 17px; font-weight: 800;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.mode-admin-link {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 18px 24px; display: flex; align-items: center; gap: 14px; cursor: pointer;
+  transition: all 0.15s; font-family: inherit; text-align: left; width: 100%;
+}
+.mode-admin-link:hover { border-color: var(--main); background: var(--main-sub); }
+.mode-admin-icon { width: 44px; height: 44px; border-radius: 14px; background: var(--main-sub); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mode-admin-icon svg { width: 22px; height: 22px; color: var(--main); }
+.mode-admin-text .t1 { font-size: 15px; font-weight: 700; color: var(--text); }
+.mode-admin-text .t2 { font-size: 12px; color: var(--text-sub); }
+
+/* ==================================================
+   SCREEN 2: EMPLOYEE SELECT
+   ================================================== */
+#screen-select { background: var(--bg); padding: var(--gap); }
+.select-inner { max-width: 480px; margin: 0 auto; width: 100%; }
+.page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.back-btn {
+  width: 44px; height: 44px; border-radius: 14px; border: 1.5px solid var(--border);
+  background: var(--card); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+}
+.back-btn:hover { border-color: var(--main); background: var(--main-sub); }
+.back-btn svg { width: 20px; height: 20px; color: var(--text-sub); }
+.page-title { font-size: 24px; font-weight: 900; color: var(--text); }
+.page-sub { font-size: 14px; color: var(--text-sub); margin-top: 2px; }
+
+.staff-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.staff-card {
+  background: var(--card); border: 2px solid var(--border); border-radius: 18px;
+  padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+  cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; width: 100%;
+}
+.staff-card:hover { border-color: var(--main); background: var(--main-sub); }
+.staff-card.selected { border-color: var(--main); background: var(--main-sub); }
+.staff-card.selected .staff-check { background: var(--main); border-color: var(--main); }
+.staff-card.selected .staff-check svg { display: block; }
+.staff-avatar {
+  width: 48px; height: 48px; border-radius: 16px;
+  background: var(--main-sub); color: var(--main);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; flex-shrink: 0;
+}
+.staff-info .s-name { font-size: 17px; font-weight: 700; color: var(--text); }
+.staff-info .s-dept { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.staff-check {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+  margin-left: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.staff-check svg { display: none; width: 14px; height: 14px; color: #fff; }
+
+.select-search {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 12px 16px; font-size: 15px; font-family: inherit; outline: none;
+  width: 100%; margin-bottom: 14px; color: var(--text);
+  display: flex; align-items: center;
+}
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-sub); }
+.search-input {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 14px;
+  padding: 13px 16px 13px 42px; font-size: 16px; font-family: inherit;
+  background: var(--card); color: var(--text); outline: none; transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--main); }
+
+.select-next-btn { display: none; }
+.select-next-btn.visible { display: flex; }
+
+.admin-link-small {
+  text-align: center; padding: 16px 0; margin-top: 8px;
+}
+.admin-link-small button {
+  background: none; border: none; color: var(--text-sub); font-size: 13px;
+  cursor: pointer; font-family: inherit; text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* ==================================================
+   SCREEN 3: PIN CODE
+   ================================================== */
+#screen-pin {
+  background: var(--bg);
+  align-items: center; justify-content: center; padding: var(--gap);
+}
+.pin-inner { width: 100%; max-width: 380px; }
+.pin-header { text-align: center; margin-bottom: 36px; }
+.pin-back { display: flex; justify-content: flex-start; margin-bottom: 20px; }
+.pin-staff-name { font-size: 28px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+.pin-sub { font-size: 15px; color: var(--text-sub); }
+
+.pin-dots-wrap { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; }
+.pin-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2.5px solid var(--border); background: transparent;
+  transition: all 0.15s;
+}
+.pin-dot.filled { background: var(--main); border-color: var(--main); transform: scale(1.1); }
+.pin-error {
+  text-align: center; font-size: 14px; font-weight: 700; color: var(--red);
+  min-height: 22px; margin-bottom: 20px; transition: opacity 0.2s;
+}
+
+.pin-pad {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+}
+.pin-key {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 20px;
+  height: 72px; font-size: 26px; font-weight: 700; font-family: 'DM Mono', monospace;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text); transition: all 0.12s; box-shadow: var(--shadow);
+  user-select: none;
+}
+.pin-key:hover { border-color: var(--main); background: var(--main-sub); color: var(--main); }
+.pin-key:active { transform: scale(0.94); background: var(--main-sub2); }
+.pin-key.del { font-size: 16px; color: var(--text-sub); }
+.pin-key.del svg { width: 24px; height: 24px; }
+.pin-key.back-key { font-size: 14px; font-weight: 700; color: var(--text-sub); }
+.pin-key.back-key svg { width: 20px; height: 20px; }
+
+/* ==================================================
+   SCREEN 4: TIME CLOCK
+   ================================================== */
+#screen-clock { background: var(--bg); padding: 0; }
+.clock-inner { max-width: 480px; margin: 0 auto; padding: var(--gap); }
+
+/* StaffHeaderCard */
+.staff-header-card {
+  background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: var(--gap);
+}
+.staff-header-avatar {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--main-sub); color: var(--main);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 800; flex-shrink: 0;
+}
+.staff-header-info { flex: 1; min-width: 0; }
+.staff-header-name { font-size: 19px; font-weight: 800; color: var(--text); }
+.staff-header-meta { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.logout-btn {
+  background: none; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 8px 14px; font-size: 13px; font-weight: 700; color: var(--text-sub);
+  cursor: pointer; display: flex; align-items: center; gap: 5px; font-family: inherit;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+
+/* AttendanceStatusBadge */
+.status-row { display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+
+/* CurrentTimeCard */
+.time-card {
+  background: var(--main); border-radius: var(--radius);
+  padding: 28px 24px; text-align: center; margin-bottom: var(--gap);
+  box-shadow: 0 8px 32px rgba(91,76,196,0.25); position: relative; overflow: hidden;
+}
+.time-card::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+.time-card::after {
+  content: ''; position: absolute; bottom: -20px; left: -20px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+.time-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 58px; font-weight: 500; color: #fff;
+  letter-spacing: 2px; line-height: 1; margin-bottom: 8px;
+  position: relative; z-index: 1;
+}
+.time-date {
+  font-size: 15px; color: rgba(255,255,255,0.75); margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+.time-schedule {
+  background: rgba(255,255,255,0.12); border-radius: 12px;
+  padding: 10px 16px; font-size: 13px; color: rgba(255,255,255,0.9);
+  display: inline-block; position: relative; z-index: 1;
+}
+
+/* PunchActionButtons */
+.punch-buttons { margin-bottom: var(--gap); }
+.punch-section-label { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+.punch-btn-group { display: flex; flex-direction: column; gap: 12px; }
+.punch-btn-group.row { flex-direction: row; }
+.punch-finished {
+  background: var(--card); border-radius: 20px; border: 1px solid var(--border);
+  padding: 20px; text-align: center; color: var(--text-sub); font-size: 15px; font-weight: 600;
+}
+
+/* TodayAttendanceRecord */
+.attendance-record-card {
+  background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: var(--gap);
+}
+.record-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.record-row:last-child { border-bottom: none; }
+.record-label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-sub); font-weight: 600; }
+.record-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.record-time { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 600; color: var(--text); }
+.record-time.empty { color: var(--border); }
+
+/* LeaveBalanceCard */
+.leave-card {
+  background: var(--card); border-radius: var(--radius); border: 1px solid var(--border);
+  box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: var(--gap);
+}
+.leave-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.leave-row:last-child { border-bottom: none; }
+.leave-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.leave-detail { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+.leave-val { text-align: right; }
+.leave-days { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 600; color: var(--main); }
+.leave-unit { font-size: 12px; color: var(--text-sub); }
+
+/* AdminSwitchLink */
+.admin-switch-bar {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 16px;
+  padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; transition: all 0.15s; margin-bottom: 12px;
+}
+.admin-switch-bar:hover { border-color: var(--main); background: var(--main-sub); }
+.admin-switch-text { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+.admin-switch-arrow svg { width: 16px; height: 16px; color: var(--text-sub); }
+
+/* ==================================================
+   ADMIN LOGIN
+   ================================================== */
+#screen-admin-login {
+  background: var(--bg); align-items: center; justify-content: center; padding: var(--gap);
+}
+.admin-login-box { width: 100%; max-width: 400px; }
+.admin-login-header { text-align: center; margin-bottom: 32px; }
+.admin-login-icon {
+  width: 64px; height: 64px; border-radius: 20px; background: var(--main-sub);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+}
+.admin-login-icon svg { width: 32px; height: 32px; color: var(--main); }
+.admin-login-title { font-size: 22px; font-weight: 900; }
+.admin-login-sub { font-size: 14px; color: var(--text-sub); margin-top: 4px; }
+.login-field { margin-bottom: 16px; }
+.login-field label { font-size: 13px; font-weight: 700; color: var(--text-sub); display: block; margin-bottom: 8px; }
+.login-pw-wrap { position: relative; }
+.login-pw-wrap input {
+  width: 100%; border: 2px solid var(--border); border-radius: 14px;
+  padding: 14px 48px 14px 16px; font-size: 16px; font-family: inherit;
+  background: var(--card); color: var(--text); outline: none; transition: border-color 0.15s;
+  letter-spacing: 3px;
+}
+.login-pw-wrap input:focus { border-color: var(--main); }
+.eye-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; padding: 4px;
+  color: var(--text-sub);
+}
+.eye-btn svg { width: 20px; height: 20px; }
+.login-error { background: var(--red-light); color: var(--red); border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 700; margin-bottom: 14px; display: none; }
+.login-hint { text-align: center; font-size: 12px; color: var(--text-sub); margin-top: 12px; }
+.login-back-link { text-align: center; margin-top: 20px; }
+.login-back-link button { background: none; border: none; color: var(--text-sub); font-size: 13px; cursor: pointer; font-family: inherit; text-decoration: underline; }
+
+/* ==================================================
+   RESPONSIVE
+   ================================================== */
+@media (max-width: 400px) {
+  :root { --gap: 16px; }
+  .time-display { font-size: 48px; }
+  .pin-key { height: 64px; font-size: 24px; }
+  .mode-main-title { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOAST ===== -->
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<!-- ============================================================
+     SCREEN 1: MODE SELECT (ModeSelectScreen)
+     ============================================================ -->
+<div class="screen active" id="screen-mode">
+  <div class="mode-inner">
+    <div class="mode-header">
+      <div class="mode-icon">
+        <!-- Building icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18M3 10h18M5 21V7l7-4 7 4v14M9 21v-4h6v4"/>
+        </svg>
+      </div>
+      <div class="mode-title">勤怠管理</div>
+      <div class="mode-sub">出退勤・休憩・休暇残数を確認できます</div>
+    </div>
+
+    <!-- 従業員用 メインカード -->
+    <button class="mode-main-card" onclick="goToSelect()">
+      <div class="mode-main-label">STAFF</div>
+      <div class="mode-main-title">打刻する</div>
+      <div class="mode-main-desc">出勤・退勤・休憩を記録する</div>
+      <div class="mode-main-cta">
+        <!-- Clock icon -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        打刻を開始する
+      </div>
+    </button>
+
+    <!-- 管理者用 サブリンク -->
+    <button class="mode-admin-link" onclick="goToAdminLogin()">
+      <div class="mode-admin-icon">
+        <!-- Shield icon -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="mode-admin-text">
+        <div class="t1">管理画面</div>
+        <div class="t2">従業員管理・勤怠確認</div>
+      </div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8A98" stroke-width="2.5" style="margin-left:auto;flex-shrink:0"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 2: EMPLOYEE SELECT (EmployeeSelectScreen)
+     ============================================================ -->
+<div class="screen" id="screen-select">
+  <div class="select-inner" style="padding-top:24px">
+    <div class="page-header">
+      <button class="back-btn" onclick="goToMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div>
+        <div class="page-title">スタッフ打刻</div>
+        <div class="page-sub">自分の名前を選んでください</div>
+      </div>
+    </div>
+
+    <!-- 検索 -->
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" id="staff-search" type="text" placeholder="名前で検索..." oninput="filterStaff()" autocomplete="off">
+    </div>
+
+    <!-- スタッフ一覧 -->
+    <div class="staff-list" id="staff-list"></div>
+
+    <!-- 次へボタン -->
+    <button class="btn btn-primary select-next-btn" id="select-next-btn" onclick="goToPin()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      次へ進む
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 3: PIN CODE (PinCodeScreen)
+     ============================================================ -->
+<div class="screen" id="screen-pin">
+  <div class="pin-inner">
+    <div class="pin-back">
+      <button class="btn-ghost" onclick="goToSelect()" style="display:flex;align-items:center;gap:6px;padding:8px 0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        戻る
+      </button>
+    </div>
+    <div class="pin-header">
+      <div class="pin-staff-name" id="pin-name"></div>
+      <div class="pin-sub">4桁のパスコードを入力してください</div>
+    </div>
+
+    <!-- ドット -->
+    <div class="pin-dots-wrap" id="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+
+    <!-- テンキー -->
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinInput('1')">1</button>
+      <button class="pin-key" onclick="pinInput('2')">2</button>
+      <button class="pin-key" onclick="pinInput('3')">3</button>
+      <button class="pin-key" onclick="pinInput('4')">4</button>
+      <button class="pin-key" onclick="pinInput('5')">5</button>
+      <button class="pin-key" onclick="pinInput('6')">6</button>
+      <button class="pin-key" onclick="pinInput('7')">7</button>
+      <button class="pin-key" onclick="pinInput('8')">8</button>
+      <button class="pin-key" onclick="pinInput('9')">9</button>
+      <button class="pin-key back-key" onclick="goToSelect()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        戻る
+      </button>
+      <button class="pin-key" onclick="pinInput('0')">0</button>
+      <button class="pin-key del" onclick="pinDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN 4: TIME CLOCK (TimeClockScreen)
+     ============================================================ -->
+<div class="screen" id="screen-clock">
+  <div class="clock-inner">
+
+    <!-- StaffHeaderCard -->
+    <div class="staff-header-card">
+      <div class="staff-header-avatar" id="clock-avatar"></div>
+      <div class="staff-header-info">
+        <div class="staff-header-name" id="clock-name"></div>
+        <div class="staff-header-meta" id="clock-meta"></div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        ログアウト
+      </button>
+    </div>
+
+    <!-- AttendanceStatusBadge -->
+    <div class="status-row">
+      <div id="status-badge"></div>
+    </div>
+
+    <!-- CurrentTimeCard -->
+    <div class="time-card">
+      <div class="time-display" id="clock-time">--:--:--</div>
+      <div class="time-date" id="clock-date"></div>
+      <div class="time-schedule" id="clock-schedule"></div>
+    </div>
+
+    <!-- PunchActionButtons -->
+    <div class="punch-buttons">
+      <div class="punch-section-label">打刻操作</div>
+      <div id="punch-btn-area"></div>
+    </div>
+
+    <!-- TodayAttendanceRecord -->
+    <div class="attendance-record-card">
+      <div class="label" style="margin-bottom:0">本日の記録</div>
+      <div id="attendance-records"></div>
+    </div>
+
+    <!-- LeaveRequest (新規) -->
+    <div class="card" id="leave-request-card" style="margin-bottom:16px">
+      <button onclick="toggleLeaveRequest()" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;padding:0">
+        <span class="label" style="margin-bottom:0;cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          休暇申請
+        </span>
+        <svg id="leave-req-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8A98" stroke-width="2.5" style="transition:transform 0.2s"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div id="leave-request-body" style="display:none;margin-top:16px">
+        <div id="leave-req-msg"></div>
+        <!-- 種別選択 -->
+        <div style="margin-bottom:14px">
+          <div class="label">休暇の種類</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="leave-type-btns-emp"></div>
+        </div>
+        <!-- 日付 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <div class="label">開始日</div>
+            <input type="date" id="emp-lv-start" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fff;outline:none">
+          </div>
+          <div>
+            <div class="label">終了日</div>
+            <input type="date" id="emp-lv-end" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:14px;font-family:inherit;background:#fff;outline:none">
+          </div>
+        </div>
+        <!-- サブタイプ -->
+        <div id="emp-lv-sub-area" style="display:none;margin-bottom:12px">
+          <div class="label" id="emp-lv-sub-label">種別</div>
+          <select id="emp-lv-sub" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none"></select>
+        </div>
+        <!-- 理由 -->
+        <div style="margin-bottom:14px">
+          <div class="label">理由・メモ（任意）</div>
+          <input type="text" id="emp-lv-reason" placeholder="例：私用" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:15px;font-family:inherit;background:#fff;outline:none">
+        </div>
+        <button class="btn btn-primary" onclick="submitEmpLeave()" style="font-size:15px;padding:14px">申請する</button>
+      </div>
+    </div>
+
+    <!-- LeaveBalanceCard (折りたたみ) -->
+    <div class="leave-card">
+      <button onclick="toggleLeaveBalance()" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-family:inherit;padding:0">
+        <span class="label" style="margin-bottom:0;cursor:pointer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:5px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          休暇残数
+        </span>
+        <svg id="leave-bal-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A8A98" stroke-width="2.5" style="transition:transform 0.2s"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div id="leave-balance" style="display:none"></div>
+    </div>
+
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN LOGIN
+     ============================================================ -->
+<div class="screen" id="screen-admin-login">
+  <div class="admin-login-box">
+    <div class="admin-login-header">
+      <div class="admin-login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="admin-login-title">管理画面</div>
+      <div class="admin-login-sub">管理者パスワードを入力してください</div>
+    </div>
+    <div class="login-error" id="admin-login-error">パスワードが違います</div>
+    <div class="login-field">
+      <label>パスワード</label>
+      <div class="login-pw-wrap">
+        <input type="password" id="admin-pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
+        <button class="eye-btn" onclick="toggleAdminEye()">
+          <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="doAdminLogin()">ログインする</button>
+    <div class="login-hint">初期パスワード: admin1234</div>
+    <div class="login-back-link">
+      <button onclick="goToMode()">← トップに戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN APP (embedded, full featured)
+     ============================================================ -->
+<div class="screen" id="screen-admin">
+  <div style="font-family:'Noto Sans JP',sans-serif">
+    <!-- 管理者用UI (既存管理者機能をそのまま埋め込み) -->
+    <!-- Switch back bar -->
+    <div style="background:#5B4CC4;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100">
+      <div style="display:flex;align-items:center;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 21h18M3 10h18M5 21V7l7-4 7 4v14M9 21v-4h6v4"/></svg>
+        <span style="color:#fff;font-size:14px;font-weight:700">勤怠管理 - 管理者</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="switchToStaff()" style="background:rgba(255,255,255,0.15);border:none;border-radius:10px;padding:6px 12px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">打刻画面へ</button>
+        <button onclick="adminLogout()" style="background:none;border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:6px 12px;color:rgba(255,255,255,0.8);font-size:12px;cursor:pointer;font-family:inherit">ログアウト</button>
+      </div>
+    </div>
+    <!-- nav -->
+    <div style="display:flex;background:#fff;border-bottom:1px solid #E5E2F0;padding:0 16px;overflow-x:auto">
+      <button class="anb on" onclick="atab('emp',this)">従業員</button>
+      <button class="anb" onclick="atab('family',this)">家族</button>
+      <button class="anb" onclick="atab('bday',this)">誕生日</button>
+      <button class="anb" onclick="atab('school',this)">学校行事</button>
+      <button class="anb" onclick="atab('att',this)">出退勤</button>
+      <button class="anb" onclick="atab('history',this)">履歴</button>
+      <button class="anb" onclick="atab('leave',this)">休暇管理</button>
+      <button class="anb" onclick="atab('calendar',this)">カレンダー</button>
+      <button class="anb" id="anb-notify" onclick="atab('notify',this)" style="position:relative">
+        申請通知
+        <span id="notify-badge" style="display:none;position:absolute;top:6px;right:4px;background:#C43636;color:#fff;border-radius:99px;font-size:10px;font-weight:800;padding:1px 6px;line-height:1.4"></span>
+      </button>
+      <button class="anb" onclick="atab('settings',this)">設定</button>
+    </div>
+    <div style="padding:16px;max-width:1100px;margin:0 auto" id="admin-pg">
+      <div id="asec-emp" class="asec on">
+        <div class="acard">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div class="act">従業員一覧</div>
+            <div style="display:flex;gap:7px;align-items:center">
+              <input id="emp-search" placeholder="名前で検索..." style="width:150px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" oninput="renderEmpList()">
+              <button class="abtn abtn-p abtn-sm" onclick="openEmpForm(null)">＋ 新規登録</button>
+            </div>
+          </div>
+          <table><thead><tr><th>氏名</th><th>携帯電話</th><th>住所</th><th>入社日</th><th>雇用</th><th>有給残</th><th></th></tr></thead><tbody id="emp-list"></tbody></table>
+        </div>
+        <div id="emp-form" class="acard" style="display:none">
+          <div class="act" id="ef-title">従業員登録</div>
+          <div class="g2"><div class="fr"><label>氏名 *</label><input id="ef-name" placeholder="山田 太郎"></div><div class="fr"><label>よみがな</label><input id="ef-kana" placeholder="やまだ たろう"></div></div>
+          <div class="g2"><div class="fr"><label>生年月日</label><input type="date" id="ef-birth"></div><div class="fr"><label>入社日 *</label><input type="date" id="ef-join"></div></div>
+          <div class="g2"><div class="fr"><label>部署</label><input id="ef-dept" placeholder="営業部"></div><div class="fr"><label>雇用形態</label><select id="ef-type" onchange="togglePart()"><option>正社員</option><option>パート・アルバイト</option><option>契約社員</option><option>派遣社員</option></select></div></div>
+          <div id="part-area" style="display:none"><div class="g2"><div class="fr"><label>出勤時刻</label><input type="time" id="ef-start" value="09:00"></div><div class="fr"><label>退勤時刻</label><input type="time" id="ef-end" value="13:00"></div></div><div class="fr"><label>休憩（分）</label><input type="number" id="ef-break" value="0" min="0" max="120" style="max-width:90px"></div></div>
+          <div class="adiv"></div>
+          <div class="fr"><label>携帯電話</label><input type="tel" id="ef-mobile" placeholder="090-0000-0000"></div>
+          <div class="g2"><div class="fr"><label>緊急連絡先 氏名</label><input id="ef-ename"></div><div class="fr"><label>緊急連絡先 電話番号</label><input type="tel" id="ef-ephone"></div></div>
+          <div class="adiv"></div>
+          <div class="g2"><div class="fr"><label>郵便番号</label><div style="display:flex;gap:6px"><input type="text" id="ef-zip" placeholder="000-0000" style="max-width:110px" oninput="fmtZip(this)"><button class="abtn abtn-sm" onclick="lookupZip()">検索</button></div></div><div class="fr"><label>都道府県</label><select id="ef-pref"><option value="">選択...</option><option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option></select></div></div>
+          <div class="fr"><label>市区町村</label><input id="ef-city"></div>
+          <div class="fr"><label>番地・建物名</label><input id="ef-addr"></div>
+          <div class="adiv"></div>
+          <div class="fr"><label>打刻用パスワード（4桁）*</label><input type="password" id="ef-pin" placeholder="4桁の数字" maxlength="4" style="max-width:120px;letter-spacing:4px;font-size:18px"></div>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="abtn abtn-p" onclick="saveEmp()">保存</button><button class="abtn" onclick="closeEmpForm()">キャンセル</button><button class="abtn abtn-d abtn-sm" id="ef-del" onclick="delEmp()" style="display:none;margin-left:auto">削除</button></div>
+          <div id="ef-msg"></div>
+        </div>
+        <div id="emp-detail" class="acard" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act" id="ed-title">従業員詳細</div><button class="abtn abtn-sm" onclick="document.getElementById('emp-detail').style.display='none'">✕</button></div>
+          <div id="ed-content"></div>
+        </div>
+      </div>
+      <div id="asec-family" class="asec">
+        <div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">家族・子供情報</div><select id="fam-sel" style="max-width:200px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderFamily()"><option value="">-- 従業員を選択 --</option></select></div><div id="fam-content"><p style="color:#8A8A98;font-size:13px">従業員を選択してください</p></div></div>
+        <div id="sp-form-card" class="acard" style="display:none"><div class="act">配偶者情報</div><div class="g2"><div class="fr"><label>氏名</label><input id="sp-name"></div><div class="fr"><label>よみがな</label><input id="sp-kana"></div></div><div class="g2"><div class="fr"><label>生年月日</label><input type="date" id="sp-birth"></div><div class="fr"><label>職業</label><input id="sp-job"></div></div><div class="fr"><label>備考</label><input id="sp-note"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="abtn abtn-p" onclick="saveSpouse()">保存</button><button class="abtn" onclick="document.getElementById('sp-form-card').style.display='none'">キャンセル</button></div><div id="sp-msg"></div></div>
+        <div id="ch-form-card" class="acard" style="display:none"><div class="act" id="cf-title">子供を追加</div><div class="g2"><div class="fr"><label>名前</label><input id="cf-name"></div><div class="fr"><label>出生日 *</label><input type="date" id="cf-birth"></div></div><div class="g2"><div class="fr"><label>性別</label><select id="cf-gender"><option value="">未選択</option><option value="男">男</option><option value="女">女</option></select></div><div class="fr"><label>幼稚園入園年齢</label><select id="cf-kg"><option value="3">3歳</option><option value="4">4歳</option></select></div></div><div class="fr"><label>備考</label><input id="cf-note"></div><div style="display:flex;gap:8px;margin-top:10px"><button class="abtn abtn-p" onclick="saveChild()">保存</button><button class="abtn" onclick="document.getElementById('ch-form-card').style.display='none'">キャンセル</button><button class="abtn abtn-d abtn-sm" id="cf-del" onclick="delChild()" style="display:none;margin-left:auto">削除</button></div><div id="cf-msg"></div></div>
+      </div>
+      <div id="asec-bday" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">今後の誕生日</div><select id="bday-range" style="max-width:130px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderBday()"><option value="30">30日以内</option><option value="60">60日以内</option><option value="90" selected>90日以内</option><option value="180">180日以内</option><option value="365">1年以内</option></select></div><div id="bday-list"></div></div><div class="acard"><div class="act">誕生日一覧</div><table><thead><tr><th>氏名</th><th>続柄</th><th>生年月日</th><th>年齢</th><th>次の誕生日</th><th>あと</th></tr></thead><tbody id="bday-all"></tbody></table></div></div>
+      <div id="asec-school" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">学校イベント</div><div style="display:flex;gap:6px"><select id="sc-emp-sel" style="max-width:160px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderSchool()"><option value="">全員</option></select><select id="sc-filter" style="max-width:120px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderSchool()"><option value="all">すべて</option><option value="upcoming">今後1年</option><option value="2025">2025年</option><option value="2026">2026年</option><option value="2027">2027年</option><option value="2028">2028年</option></select></div></div><table><thead><tr><th>イベント</th><th>年月</th><th>従業員</th><th>お子様</th><th>年齢</th></tr></thead><tbody id="sc-table"></tbody></table></div><div class="acard"><div class="act">今後6ヶ月のイベント</div><div id="sc-upcoming"></div></div></div>
+      <div id="asec-att" class="asec">
+        <div class="acard"><div class="act">本日の出勤状況</div><div id="hol-notice2"></div><table><thead><tr><th>氏名</th><th>雇用</th><th>出勤</th><th>休憩</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody id="att-list"></tbody></table></div>
+      </div>
+      <div id="asec-history" class="asec">
+        <div class="acard">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="act" style="margin-bottom:0">打刻履歴</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="hist-emp-sel" style="font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderHistory()"><option value="">全員</option></select>
+              <input type="month" id="hist-month" style="font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderHistory()">
+            </div>
+          </div>
+          <div id="hist-table-wrap"></div>
+        </div>
+      </div>
+      <div id="asec-leave" class="asec"><div class="acard"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="act">休暇管理</div><select id="lv-emp-sel" style="max-width:200px;font-family:inherit;font-size:13px;border:1px solid #E5E2F0;border-radius:8px;padding:6px 10px;outline:none" onchange="renderLeave()"><option value="">-- 従業員を選択 --</option></select></div><div id="lv-info" style="display:none"><div class="act" style="margin-bottom:6px">残日数サマリー</div><div class="g4" style="margin-bottom:12px" id="lv-metrics"></div><div class="adiv"></div><div class="act">休暇申請</div><div style="margin-bottom:10px"><div style="font-size:11px;color:#8A8A98;margin-bottom:6px;font-weight:600">休暇の種類</div><div class="lt-grid" id="leave-type-grid"></div></div><div class="g2"><div class="fr"><label>開始日</label><input type="date" id="lv-start"></div><div class="fr"><label>終了日</label><input type="date" id="lv-end"></div></div><div id="lv-subtype-area" style="display:none"><div class="fr"><label id="lv-subtype-lbl">種別</label><select id="lv-subtype"></select></div></div><div id="lv-holiday-ref-area" style="display:none"><div class="fr"><label>振替元の休日出勤日</label><input type="date" id="lv-holiday-ref"></div></div><div class="fr"><label>理由・メモ</label><input id="lv-reason" placeholder="任意"></div><button class="abtn abtn-p abtn-sm" onclick="applyLeave()">申請する</button><div id="lv-msg"></div><div class="adiv"></div><div class="act">有給付与履歴</div><table style="margin-bottom:12px"><thead><tr><th>付与日</th><th>勤続期間</th><th>付与日数</th></tr></thead><tbody id="lv-grant-table"></tbody></table><div class="adiv"></div><div class="act">休暇取得履歴</div><table><thead><tr><th>日付</th><th>種類</th><th>詳細</th><th>日数</th><th>理由</th></tr></thead><tbody id="lv-hist"></tbody></table></div></div></div>
+      <div id="asec-calendar" class="asec">
+        <div class="acard">
+          <!-- ヘッダー：月ナビ＋フィルター -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <button onclick="calPrevMonth()" style="width:34px;height:34px;border:1.5px solid #E5E2F0;border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">‹</button>
+              <div id="cal-title" style="font-size:16px;font-weight:800;color:#1F1F29;min-width:110px;text-align:center"></div>
+              <button onclick="calNextMonth()" style="width:34px;height:34px;border:1.5px solid #E5E2F0;border-radius:10px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px">›</button>
+              <button onclick="calGoToday()" style="border:1.5px solid #E5E2F0;border-radius:10px;padding:6px 12px;background:#fff;cursor:pointer;font-size:12px;font-family:inherit;color:#8A8A98;font-weight:600">今月</button>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <select id="cal-emp-filter" style="font-family:inherit;font-size:12px;border:1px solid #E5E2F0;border-radius:8px;padding:5px 8px;outline:none" onchange="renderCalendar()">
+                <option value="">全員</option>
+              </select>
+              <!-- 凡例 -->
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <span style="font-size:11px;display:flex;align-items:center;gap:3px;color:#5B4CC4"><span style="width:10px;height:10px;border-radius:3px;background:#EEEAFE;display:inline-block;border:1.5px solid #5B4CC4"></span>年次有給</span>
+                <span style="font-size:11px;display:flex;align-items:center;gap:3px;color:#C43636"><span style="width:10px;height:10px;border-radius:3px;background:#FDEAEA;display:inline-block;border:1.5px solid #C43636"></span>病欠</span>
+                <span style="font-size:11px;display:flex;align-items:center;gap:3px;color:#E07C2A"><span style="width:10px;height:10px;border-radius:3px;background:#FEF0E3;display:inline-block;border:1.5px solid #E07C2A"></span>その他</span>
+              </div>
+            </div>
+          </div>
+          <!-- カレンダーグリッド -->
+          <div id="cal-grid"></div>
+          <!-- 当月の休暇一覧 -->
+          <div style="margin-top:18px">
+            <div class="act">当月の休暇一覧</div>
+            <div id="cal-list"></div>
+          </div>
+        </div>
+      </div>
+      <div id="asec-notify" class="asec">
+        <div class="acard">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+            <div class="act" style="margin-bottom:0">休暇申請通知</div>
+            <div style="display:flex;gap:6px">
+              <select id="notify-filter" style="font-family:inherit;font-size:12px;border:1px solid #E5E2F0;border-radius:8px;padding:5px 8px;outline:none" onchange="renderNotify()">
+                <option value="pending">未対応</option>
+                <option value="approved">承認済み</option>
+                <option value="rejected">却下済み</option>
+                <option value="all">すべて</option>
+              </select>
+            </div>
+          </div>
+          <div id="notify-list"></div>
+        </div>
+      </div>
+      <div id="asec-settings" class="asec">
+        <div class="acard" style="max-width:480px"><div class="act">管理者パスワード変更</div><div class="fr"><label>現在のパスワード</label><input type="password" id="pw-current" placeholder="現在のパスワード"></div><div class="fr"><label>新しいパスワード</label><input type="password" id="pw-new" placeholder="4文字以上"></div><div class="fr"><label>確認</label><input type="password" id="pw-confirm" placeholder="確認のため再入力"></div><button class="abtn abtn-p abtn-sm" onclick="changePassword()">変更する</button><div id="pw-msg"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Admin inline styles */
+.anb{background:none;border:none;padding:10px 12px;font-size:12px;color:#8A8A98;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:inherit;white-space:nowrap}
+.anb.on{color:#5B4CC4;border-bottom-color:#5B4CC4;font-weight:700}
+.asec{display:none}.asec.on{display:block}
+.acard{background:#fff;border:1px solid #E5E2F0;border-radius:16px;padding:16px 18px;margin-bottom:14px}
+.act{font-size:10px;font-weight:700;color:#8A8A98;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.fr{margin-bottom:10px}
+.fr label{font-size:12px;color:#8A8A98;display:block;margin-bottom:3px;font-weight:600}
+.fr input,.fr select,.fr textarea{width:100%;font-size:13px;font-family:inherit;border:1px solid #E5E2F0;border-radius:8px;padding:7px 10px;background:#fff;color:#1F1F29;outline:none}
+.abtn{background:none;border:1px solid #E5E2F0;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;color:#1F1F29}
+.abtn-p{background:#5B4CC4;border-color:#5B4CC4;color:#fff}
+.abtn-d{border-color:#C43636;color:#C43636}
+.abtn-sm{padding:3px 9px;font-size:11px}
+.adiv{height:1px;background:#E5E2F0;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 10px;font-size:11px;font-weight:700;color:#8A8A98;border-bottom:1px solid #E5E2F0;background:#F7F7FB}
+td{padding:8px 10px;border-bottom:1px solid #F0EEF8;color:#1F1F29;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.abdg{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+.abdg-p{background:#EEEAFE;color:#5B4CC4}.abdg-g{background:#E3F7F0;color:#1B9E6E}
+.abdg-o{background:#FEF0E3;color:#E07C2A}.abdg-r{background:#FDEAEA;color:#C43636}
+.abdg-gr{background:#F0F0F5;color:#8A8A98}
+.metric{background:#F7F7FB;border-radius:10px;padding:10px 13px}
+.metric .lbl{font-size:10px;color:#8A8A98;margin-bottom:3px;font-weight:600}
+.metric .val{font-size:20px;font-weight:700}
+.lt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.lt-btn{background:#F7F7FB;border:1px solid #E5E2F0;border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s}
+.lt-btn.sel{border-color:#5B4CC4;background:#EEEAFE}
+.lt-btn .ld{font-size:10px;color:#8A8A98;margin-top:2px;display:block}
+
+/* カレンダー */
+.cal-grid-wrap{overflow-x:auto}
+.cal-table{width:100%;border-collapse:collapse;min-width:560px}
+.cal-dow{text-align:center;padding:6px 0;font-size:11px;font-weight:700;color:#8A8A98}
+.cal-dow.sun{color:#C43636}.cal-dow.sat{color:#5B4CC4}
+.cal-cell{vertical-align:top;border:1px solid #F0EEF8;padding:4px;min-height:72px;width:calc(100%/7)}
+.cal-cell.today .cal-day-num{background:#5B4CC4;color:#fff;border-radius:50%}
+.cal-cell.other-month .cal-day-num{color:#C8C8D4}
+.cal-cell.holiday-day{background:#FFF8F8}
+.cal-cell.sat-day{background:#F9F8FF}
+.cal-day-num{font-size:12px;font-weight:700;width:22px;height:22px;display:flex;align-items:center;justify-content:center;margin-bottom:3px}
+.cal-cell.sun-day .cal-day-num{color:#C43636}
+.cal-cell.sat-day .cal-day-num{color:#5B4CC4}
+.cal-chip{font-size:10px;font-weight:700;border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block;line-height:1.4;cursor:default}
+.cal-chip.annual{background:#EEEAFE;color:#5B4CC4;border-left:3px solid #5B4CC4}
+.cal-chip.sick{background:#FDEAEA;color:#C43636;border-left:3px solid #C43636}
+.cal-chip.birthday{background:#FEF0E3;color:#E07C2A;border-left:3px solid #E07C2A}
+.cal-chip.compensatory{background:#FEF0E3;color:#E07C2A;border-left:3px solid #E07C2A}
+.cal-chip.school{background:#E3F7F0;color:#1B9E6E;border-left:3px solid #1B9E6E}
+.cal-chip.hol{background:#F7F7FB;color:#8A8A98;border-left:3px solid #C8C8D4}
+.al{border-radius:8px;padding:8px 12px;font-size:12px;margin-top:8px}
+.al-s{background:#E3F7F0;color:#1B9E6E}.al-i{background:#E6F1FB;color:#0C447C}
+.al-w{background:#FEF0E3;color:#E07C2A}.al-e{background:#FDEAEA;color:#C43636}
+.info-row{display:flex;gap:6px;align-items:baseline;padding:4px 0;border-bottom:1px solid #F0EEF8;font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-lbl{color:#8A8A98;min-width:92px;flex-shrink:0;font-weight:600}
+.spouse-box,.child-box{background:#F7F7FB;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.tl-row{display:flex;overflow-x:auto;padding-bottom:4px}
+.tl-it{flex:0 0 auto;text-align:center;padding:5px 8px;border-right:1px solid #E5E2F0;min-width:74px}
+.tl-it:last-child{border-right:none}
+.tl-e{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;display:inline-block;margin-top:2px}
+</style>
+
+<script>
+// ===== DATA =====
+const TODAY = new Date();
+const TODAYSTR = TODAY.toISOString().split('T')[0];
+const WS = '09:00', WE = '17:30', WB = 60;
+const H25=['2025-01-01','2025-01-02','2025-01-03','2025-01-13','2025-02-11','2025-02-23','2025-02-24','2025-03-20','2025-04-29','2025-05-03','2025-05-04','2025-05-05','2025-05-06','2025-07-21','2025-08-11','2025-09-15','2025-09-22','2025-09-23','2025-10-13','2025-11-03','2025-11-23','2025-11-24','2025-12-29','2025-12-30','2025-12-31'];
+const H26=['2026-01-01','2026-01-02','2026-01-03','2026-01-12','2026-02-11','2026-02-23','2026-03-20','2026-04-29','2026-05-03','2026-05-04','2026-05-05','2026-05-06','2026-07-20','2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23','2026-12-26','2026-12-27','2026-12-28','2026-12-29','2026-12-30','2026-12-31'];
+function isHol(s){const d=new Date(s+'T00:00:00');const w=d.getDay();if(w===0||w===6)return true;return(d.getFullYear()===2026?H26:H25).includes(s);}
+function holLbl(s){const d=new Date(s+'T00:00:00');const w=d.getDay();if(w===0)return'日曜';if(w===6)return'土曜';const m=d.getMonth()+1,dy=d.getDate(),y=d.getFullYear();if((y===2026&&s>='2026-12-26')||(y!==2026&&m===12&&dy>=29))return'年末休暇';if(m===1&&dy<=3)return'年始休暇';return'祝日';}
+
+// ===== localStorage 永続化 =====
+const LS_KEY = 'kintai_v1';
+
+const DEFAULT_EMPS = [
+  {id:1,name:'山田 太郎',kana:'やまだ たろう',birth:'1985-06-15',joinDate:'2020-04-01',dept:'営業部',type:'正社員',start:WS,end:WE,brk:WB,mobile:'090-1234-5678',ename:'山田 花子',ephone:'090-8765-4321',zip:'150-0002',pref:'東京都',city:'渋谷区渋谷',addr:'1-1-1',pin:'1234'},
+  {id:2,name:'鈴木 花子',kana:'すずき はなこ',birth:'1990-08-22',joinDate:'2022-07-15',dept:'総務部',type:'正社員',start:WS,end:WE,brk:WB,mobile:'080-9876-5432',ename:'鈴木 一郎',ephone:'080-1111-2222',zip:'160-0023',pref:'東京都',city:'新宿区西新宿',addr:'2-3-4',pin:'5678'},
+  {id:3,name:'田中 健一',kana:'たなか けんいち',birth:'1995-05-10',joinDate:'2023-01-10',dept:'開発部',type:'パート・アルバイト',start:'09:00',end:'13:00',brk:0,mobile:'070-1111-2222',ename:'田中 美咲',ephone:'070-3333-4444',zip:'',pref:'',city:'',addr:'',pin:'0000'}
+];
+const DEFAULT_LRECS = {
+  1:[{date:'2026-01-10',end:'2026-01-10',cat:'annual',sub:'全日',days:1,reason:'私用',status:'approved',appliedAt:'2026/1/10 9:00:00',resolvedAt:'2026/1/10 10:00:00'}],
+  2:[],3:[]
+};
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+function saveData() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      emps, nEmpId, spouses, children, nChId, attendance, lRecs, adminPassword
+    }));
+  } catch(e) { console.warn('保存失敗:', e); }
+}
+
+const _saved = loadData();
+let emps        = _saved ? _saved.emps        : DEFAULT_EMPS;
+let nEmpId      = _saved ? _saved.nEmpId      : 4;
+let spouses     = _saved ? _saved.spouses     : {1:{name:'山田 花子',kana:'やまだ はなこ',birth:'1987-03-08',job:'会社員',note:''}};
+let children    = _saved ? _saved.children    : {1:[{id:1,name:'山田 一郎',birth:'2019-03-15',gender:'男',kgAge:3,note:''},{id:2,name:'山田 花',birth:'2022-08-20',gender:'女',kgAge:3,note:''}],2:[],3:[]};
+let nChId       = _saved ? _saved.nChId       : 10;
+let attendance  = _saved ? _saved.attendance  : {};
+let lRecs       = _saved ? _saved.lRecs       : DEFAULT_LRECS;
+let adminPassword = _saved ? _saved.adminPassword : (localStorage.getItem('adminPw') || 'admin1234');
+
+const LT=[{m:6,d:10},{m:18,d:11},{m:30,d:12},{m:42,d:14},{m:54,d:16},{m:66,d:18},{m:78,d:20}];
+function calcGrants(j){const join=new Date(j+'T00:00:00');return LT.map(r=>{const gd=new Date(join);gd.setMonth(gd.getMonth()+r.m);const y=Math.floor(r.m/12),mo=r.m%12;const lbl=mo===6?(y===0?'6ヶ月':`${y}年6ヶ月`):`${y}年`;return{date:gd.toISOString().split('T')[0],days:r.d,label:lbl};});}
+function curGranted(j){let g=0;calcGrants(j).forEach(r=>{if(r.date<=TODAYSTR)g=r.days;});return g;}
+
+const LCATS=[
+  {id:'annual',name:'年次有給休暇',desc:'通常の有給休暇',color:'abdg-p',icon:'📅',subtypes:['全日','午前半休','午後半休']},
+  {id:'sick',name:'病欠',desc:'体調不良・通院など',color:'abdg-r',icon:'🏥',subtypes:['全日','午前半休','午後半休']},
+  {id:'birthday',name:'誕生日休暇',desc:'年1日・本人誕生日',color:'abdg-o',icon:'🎂',subtypes:null,maxDays:1},
+  {id:'compensatory',name:'振替休暇',desc:'休日出勤の振替',color:'abdg-o',icon:'🔄',subtypes:null,hasHolidayRef:true},
+  {id:'school',name:'子供の学校行事',desc:'入園式・入学式など',color:'abdg-g',icon:'🎓',subtypes:['入園式','入学式','卒業式','運動会','その他']}
+];
+function calcUsed(id,cat){return(lRecs[id]||[]).filter(r=>(!cat||r.cat===cat)&&r.status!=='rejected').reduce((s,r)=>s+(r.days||0),0);}
+function getAge(b){if(!b)return null;const bd=new Date(b+'T00:00:00');let a=TODAY.getFullYear()-bd.getFullYear();if(TODAY.getMonth()<bd.getMonth()||(TODAY.getMonth()===bd.getMonth()&&TODAY.getDate()<bd.getDate()))a--;return a;}
+function nxtBday(b){if(!b)return null;const bd=new Date(b+'T00:00:00');const ty=new Date(TODAY.getFullYear(),bd.getMonth(),bd.getDate());return ty>=TODAY?ty:new Date(TODAY.getFullYear()+1,bd.getMonth(),bd.getDate());}
+function dUntil(d){return Math.ceil((d-TODAY)/864e5);}
+function isTod(b){if(!b)return false;const bd=new Date(b+'T00:00:00');return bd.getMonth()===TODAY.getMonth()&&bd.getDate()===TODAY.getDate();}
+function calcWM(e,i,o,bs,be){
+  if(!i||!o)return 0;
+  const[ih,im]=i.split(':').map(Number);
+  const[oh,om]=o.split(':').map(Number);
+  let total=(oh*60+om)-(ih*60+im);
+  // subtract break
+  let brkMin = e.type==='正社員'?WB:(e.brk||0);
+  if(bs&&be){const[bsh,bsm]=bs.split(':').map(Number);const[beh,bem]=be.split(':').map(Number);brkMin=Math.max(brkMin,(beh*60+bem)-(bsh*60+bsm));}
+  return Math.max(0,total-brkMin);
+}
+function fmtM(m){return`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;}
+function fmtZip(el){let v=el.value.replace(/[^0-9]/g,'');if(v.length>3)v=v.slice(0,3)+'-'+v.slice(3,7);el.value=v;}
+async function lookupZip(){const zip=document.getElementById('ef-zip').value.replace('-','');if(zip.length!==7){showMsg('ef-msg','郵便番号は7桁で入力してください','i');return;}try{const r=await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);const d=await r.json();if(d.results&&d.results[0]){document.getElementById('ef-pref').value=d.results[0].address1;document.getElementById('ef-city').value=d.results[0].address2+(d.results[0].address3||'');showMsg('ef-msg','住所を自動入力しました','s');}else showMsg('ef-msg','見つかりませんでした','w');}catch{showMsg('ef-msg','住所検索に失敗しました','w');}}
+
+// ===== ATTENDANCE STATUS =====
+// attendanceStatus: not_started | working | on_break | finished
+function getAttendanceStatus(empId) {
+  const rec = attendance[`${empId}_${TODAYSTR}`];
+  if (!rec || !rec.in) return 'not_started';
+  if (rec.out) return 'finished';
+  if (rec.breakStart && !rec.breakEnd) return 'on_break';
+  return 'working';
+}
+function getAttRec(empId) {
+  return attendance[`${empId}_${TODAYSTR}`] || {};
+}
+function ensureRec(empId) {
+  const k = `${empId}_${TODAYSTR}`;
+  if (!attendance[k]) attendance[k] = { in: null, breakStart: null, breakEnd: null, out: null };
+  return attendance[k];
+}
+
+// ===== SCREEN NAVIGATION =====
+let currentEmpId = null;
+let adminLoggedIn = false;
+let pinBuf = '';
+let selectedEmpId = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToMode() { showScreen('screen-mode'); }
+function goToSelect() {
+  selectedEmpId = null;
+  pinBuf = '';
+  renderStaffList('');
+  document.getElementById('staff-search').value = '';
+  document.getElementById('select-next-btn').classList.remove('visible');
+  showScreen('screen-select');
+}
+function goToPin() {
+  if (!selectedEmpId) return;
+  pinBuf = '';
+  const e = emps.find(x => x.id === selectedEmpId);
+  document.getElementById('pin-name').textContent = e.name;
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  showScreen('screen-pin');
+}
+function goToAdminLogin() {
+  document.getElementById('admin-login-error').style.display = 'none';
+  document.getElementById('admin-pw-input').value = '';
+  showScreen('screen-admin-login');
+}
+function goToClock(empId) {
+  currentEmpId = empId;
+  renderClockScreen();
+  showScreen('screen-clock');
+}
+
+// ===== STAFF SELECT =====
+function renderStaffList(query) {
+  const list = document.getElementById('staff-list');
+  const q = query.toLowerCase();
+  const filtered = emps.filter(e => !q || e.name.includes(q) || e.kana.includes(q));
+  list.innerHTML = filtered.map(e => `
+    <button class="staff-card${e.id===selectedEmpId?' selected':''}" onclick="selectStaff(${e.id})">
+      <div class="staff-avatar">${e.name.slice(-2)}</div>
+      <div class="staff-info">
+        <div class="s-name">${e.name}</div>
+        <div class="s-dept">${e.dept||''} · ${e.type}</div>
+      </div>
+      <div class="staff-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </button>
+  `).join('');
+}
+function filterStaff() {
+  renderStaffList(document.getElementById('staff-search').value);
+}
+function selectStaff(id) {
+  selectedEmpId = id;
+  renderStaffList(document.getElementById('staff-search').value);
+  document.getElementById('select-next-btn').classList.add('visible');
+}
+
+// ===== PIN =====
+function pinInput(k) {
+  if (pinBuf.length >= 4) return;
+  pinBuf += k;
+  updatePinDots();
+  if (pinBuf.length === 4) setTimeout(checkPin, 120);
+}
+function pinDelete() {
+  pinBuf = pinBuf.slice(0, -1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => d.classList.toggle('filled', i < pinBuf.length));
+}
+function checkPin() {
+  const e = emps.find(x => x.id === selectedEmpId);
+  if (pinBuf === e.pin) {
+    goToClock(selectedEmpId);
+  } else {
+    const err = document.getElementById('pin-error');
+    err.textContent = 'パスコードが違います';
+    const dots = document.getElementById('pin-dots');
+    dots.style.animation = 'none';
+    dots.offsetHeight;
+    dots.style.animation = 'shake 0.4s';
+    pinBuf = '';
+    setTimeout(() => { updatePinDots(); err.textContent = ''; }, 1200);
+  }
+}
+// Shake animation
+const style = document.createElement('style');
+style.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}`;
+document.head.appendChild(style);
+
+// ===== CLOCK SCREEN =====
+function renderClockScreen() {
+  const e = emps.find(x => x.id === currentEmpId);
+  if (!e) return;
+  // StaffHeaderCard
+  document.getElementById('clock-avatar').textContent = e.name.slice(-2);
+  document.getElementById('clock-name').textContent = e.name;
+  document.getElementById('clock-meta').textContent = `${e.dept||''} · ${e.type}`;
+  // Schedule
+  const sched = e.type==='正社員'
+    ? `所定: ${WS} 〜 ${WE}（休憩60分）`
+    : `所定: ${e.start} 〜 ${e.end}（休憩${e.brk}分）`;
+  document.getElementById('clock-schedule').textContent = sched;
+  // Status
+  renderStatusBadge();
+  // Punch buttons
+  renderPunchButtons();
+  // Records
+  renderAttendanceRecord();
+  // Leave
+  renderLeaveBalance(e);
+}
+
+function renderStatusBadge() {
+  const status = getAttendanceStatus(currentEmpId);
+  const map = {
+    not_started: `<div class="badge badge-gray"><span class="badge-dot" style="animation:none;background:#8A8A98"></span>未出勤</div>`,
+    working: `<div class="badge badge-green"><span class="badge-dot"></span>勤務中</div>`,
+    on_break: `<div class="badge badge-orange"><span class="badge-dot" style="background:#E07C2A"></span>休憩中</div>`,
+    finished: `<div class="badge badge-gray" style="animation:none">退勤済み</div>`,
+  };
+  document.getElementById('status-badge').innerHTML = map[status] || '';
+}
+
+function renderPunchButtons() {
+  const status = getAttendanceStatus(currentEmpId);
+  const area = document.getElementById('punch-btn-area');
+  const hol = isHol(TODAYSTR);
+  if (hol) {
+    area.innerHTML = `<div class="punch-finished">本日は${holLbl(TODAYSTR)}です</div>`;
+    return;
+  }
+  switch (status) {
+    case 'not_started':
+      area.innerHTML = `<div class="punch-btn-group">
+        <button class="btn btn-primary btn-lg" onclick="doPunchIn()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          出勤する
+        </button>
+      </div>`;
+      break;
+    case 'working':
+      area.innerHTML = `<div class="punch-btn-group row" style="gap:12px">
+        <button class="btn btn-orange" onclick="doBreakStart()" style="flex:1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+          休憩
+        </button>
+        <button class="btn btn-green" onclick="requestPunchOut()" style="flex:1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          退勤
+        </button>
+      </div>`;
+      break;
+    case 'on_break':
+      area.innerHTML = `<div class="punch-btn-group">
+        <button class="btn btn-orange btn-lg" onclick="doBreakEnd()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          休憩終了・業務再開
+        </button>
+      </div>`;
+      break;
+    case 'finished':
+      area.innerHTML = `<div class="punch-finished">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B9E6E" stroke-width="2" style="display:block;margin:0 auto 8px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        本日の勤務は終了しました<br><span style="font-size:13px;color:#8A8A98;margin-top:4px;display:block">お疲れさまでした</span>
+      </div>`;
+      break;
+  }
+}
+
+function renderAttendanceRecord() {
+  const rec = getAttRec(currentEmpId);
+  const rows = [
+    { label: '出勤', color: '#5B4CC4', time: rec.in },
+    { label: '休憩開始', color: '#E07C2A', time: rec.breakStart },
+    { label: '休憩終了', color: '#E07C2A', time: rec.breakEnd },
+    { label: '退勤', color: '#1B9E6E', time: rec.out },
+  ];
+  document.getElementById('attendance-records').innerHTML = rows.map(r => `
+    <div class="record-row">
+      <div class="record-label">
+        <div class="record-dot" style="background:${r.time?r.color:'#E5E2F0'}"></div>
+        ${r.label}
+      </div>
+      <div class="record-time${r.time?'':' empty'}">${r.time || '--:--'}</div>
+    </div>
+  `).join('');
+}
+
+function renderLeaveBalance(e) {
+  const granted = curGranted(e.joinDate);
+  const used = calcUsed(e.id, 'annual');
+  const rem = granted - used;
+  document.getElementById('leave-balance').innerHTML = `
+    <div class="leave-row">
+      <div>
+        <div class="leave-name">年次有給休暇</div>
+        <div class="leave-detail">付与 ${granted}日 / 取得済 ${used}日</div>
+      </div>
+      <div class="leave-val">
+        <div class="leave-days" style="color:${rem<=3?'var(--red)':'var(--main)'}">${rem}</div>
+        <div class="leave-unit">日 残</div>
+      </div>
+    </div>
+    <div class="leave-row">
+      <div>
+        <div class="leave-name">病欠</div>
+        <div class="leave-detail">今年度</div>
+      </div>
+      <div class="leave-val">
+        <div class="leave-days" style="font-size:18px;color:var(--text-sub)">${calcUsed(e.id,'sick')}</div>
+        <div class="leave-unit">日 取得</div>
+      </div>
+    </div>
+    <div class="leave-row">
+      <div>
+        <div class="leave-name">誕生日休暇</div>
+        <div class="leave-detail">${e.birth ? e.birth.slice(5).replace('-','月')+'日' : '年1日付与'}</div>
+      </div>
+      <div class="leave-val">
+        <div class="leave-days" style="font-size:18px;color:var(--text-sub)">${Math.max(0,1-calcUsed(e.id,'birthday'))}</div>
+        <div class="leave-unit">日 残</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== PUNCH ACTIONS =====
+function doPunchIn() {
+  if (isHol(TODAYSTR)) { showToast('本日は定休日です', 'error'); return; }
+  const rec = ensureRec(currentEmpId);
+  if (rec.in) { showToast('既に出勤済みです', 'error'); return; }
+  rec.in = nowTime();
+  refreshClock();
+  showToast(`出勤を記録しました　${rec.in}`, 'success');
+  saveData();
+  startAutoReturn();
+}
+function doBreakStart() {
+  const rec = ensureRec(currentEmpId);
+  if (!rec.in) { showToast('先に出勤してください', 'error'); return; }
+  rec.breakStart = nowTime();
+  refreshClock();
+  showToast(`休憩開始　${rec.breakStart}`, 'success');
+  saveData();
+  startAutoReturn();
+}
+function doBreakEnd() {
+  const rec = ensureRec(currentEmpId);
+  rec.breakEnd = nowTime();
+  refreshClock();
+  showToast(`休憩終了・業務再開　${rec.breakEnd}`, 'success');
+  saveData();
+  startAutoReturn();
+}
+// confirm()を使わず、インライン確認UIで退勤
+function requestPunchOut() {
+  const rec = ensureRec(currentEmpId);
+  if (!rec.in) { showToast('先に出勤してください', 'error'); return; }
+  // 退勤確認UIを表示
+  const area = document.getElementById('punch-btn-area');
+  area.innerHTML = `
+    <div style="background:var(--green-light);border:2px solid var(--green);border-radius:20px;padding:20px;text-align:center">
+      <div style="font-size:16px;font-weight:800;color:var(--green);margin-bottom:6px">退勤しますか？</div>
+      <div style="font-size:13px;color:var(--text-sub);margin-bottom:18px">この操作は取り消せません</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button class="btn btn-outline" onclick="cancelAutoReturn();renderPunchButtons()" style="font-size:15px;padding:14px">キャンセル</button>
+        <button class="btn btn-green" onclick="doPunchOut()" style="font-size:15px;padding:14px">退勤する</button>
+      </div>
+    </div>`;
+}
+function doPunchOut() {
+  const rec = ensureRec(currentEmpId);
+  rec.out = nowTime();
+  refreshClock();
+  showToast(`退勤を記録しました　${rec.out}　お疲れさまでした`, 'success');
+  saveData();
+  startAutoReturn();
+}
+function refreshClock() {
+  renderStatusBadge();
+  renderPunchButtons();
+  renderAttendanceRecord();
+}
+function doLogout() {
+  clearAutoReturn();
+  currentEmpId = null;
+  goToSelect();
+}
+function nowTime() { return new Date().toTimeString().slice(0, 5); }
+
+// ===== AUTO-RETURN after punch =====
+let autoReturnTimer = null;
+let autoReturnCount = 0;
+const AUTO_RETURN_SEC = 6;
+
+function startAutoReturn() {
+  clearAutoReturn();
+  autoReturnCount = AUTO_RETURN_SEC;
+  renderCountdown();
+  autoReturnTimer = setInterval(() => {
+    autoReturnCount--;
+    if (autoReturnCount <= 0) {
+      clearAutoReturn();
+      currentEmpId = null;
+      goToSelect();
+    } else {
+      renderCountdown();
+    }
+  }, 1000);
+}
+
+function renderCountdown() {
+  const area = document.getElementById('punch-btn-area');
+  if (!area) return;
+  const status = getAttendanceStatus(currentEmpId);
+  let btns = '';
+  switch (status) {
+    case 'not_started':
+      btns = `<div class="punch-btn-group" style="margin-bottom:12px">
+        <button class="btn btn-primary btn-lg" onclick="cancelAutoReturn();doPunchIn()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          出勤する
+        </button>
+      </div>`;
+      break;
+    case 'working':
+      btns = `<div class="punch-btn-group row" style="gap:12px;margin-bottom:12px">
+        <button class="btn btn-orange" onclick="cancelAutoReturn();doBreakStart()" style="flex:1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/></svg>
+          休憩
+        </button>
+        <button class="btn btn-green" onclick="cancelAutoReturn();requestPunchOut()" style="flex:1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          退勤
+        </button>
+      </div>`;
+      break;
+    case 'on_break':
+      btns = `<div class="punch-btn-group" style="margin-bottom:12px">
+        <button class="btn btn-orange btn-lg" onclick="cancelAutoReturn();doBreakEnd()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          休憩終了・業務再開
+        </button>
+      </div>`;
+      break;
+    case 'finished':
+      btns = `<div class="punch-finished" style="margin-bottom:12px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B9E6E" stroke-width="2" style="display:block;margin:0 auto 8px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        本日の勤務は終了しました<br><span style="font-size:13px;color:#8A8A98;margin-top:4px;display:block">お疲れさまでした</span>
+      </div>`;
+      break;
+  }
+  const pct = (autoReturnCount / AUTO_RETURN_SEC) * 100;
+  area.innerHTML = btns + `
+    <div style="background:#F7F7FB;border:1.5px solid var(--border);border-radius:16px;padding:14px 18px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;color:var(--text-sub);font-weight:600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M17 8l4 4-4 4M3 12h18"/></svg>
+          ${autoReturnCount}秒後に次の人へ
+        </div>
+        <button onclick="cancelAutoReturn()" style="background:none;border:1.5px solid var(--border);border-radius:10px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--text-sub);cursor:pointer;font-family:inherit">
+          このまま続ける
+        </button>
+      </div>
+      <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:var(--main);border-radius:99px;transition:width 0.9s linear"></div>
+      </div>
+    </div>`;
+}
+
+function cancelAutoReturn() {
+  clearAutoReturn();
+  renderPunchButtons();
+}
+function clearAutoReturn() {
+  if (autoReturnTimer) { clearInterval(autoReturnTimer); autoReturnTimer = null; }
+}
+
+// ===== 従業員画面 - 休暇申請 =====
+let empSelLCat = 'annual';
+function toggleLeaveRequest() {
+  const body = document.getElementById('leave-request-body');
+  const arrow = document.getElementById('leave-req-arrow');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  arrow.style.transform = open ? 'rotate(180deg)' : '';
+  if (open) initEmpLeaveForm();
+}
+function initEmpLeaveForm() {
+  const btns = document.getElementById('leave-type-btns-emp');
+  btns.innerHTML = LCATS.map(cat => `
+    <button onclick="selectEmpLCat('${cat.id}')" id="elbt-${cat.id}"
+      style="border:2px solid ${empSelLCat===cat.id?'var(--main)':'var(--border)'};
+             background:${empSelLCat===cat.id?'var(--main-sub)':'#fff'};
+             border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left;font-family:inherit;transition:all 0.15s">
+      <div style="font-size:13px;font-weight:700;color:${empSelLCat===cat.id?'var(--main)':'var(--text)'}">${cat.name}</div>
+      <div style="font-size:11px;color:var(--text-sub);margin-top:2px">${cat.desc}</div>
+    </button>`).join('');
+  updateEmpLeaveSubtype();
+}
+function selectEmpLCat(id) {
+  empSelLCat = id;
+  initEmpLeaveForm();
+}
+function updateEmpLeaveSubtype() {
+  const cat = LCATS.find(c => c.id === empSelLCat);
+  const area = document.getElementById('emp-lv-sub-area');
+  if (cat && cat.subtypes) {
+    area.style.display = 'block';
+    const sel = document.getElementById('emp-lv-sub');
+    sel.innerHTML = cat.subtypes.map(s => `<option>${s}</option>`).join('');
+  } else { area.style.display = 'none'; }
+}
+function submitEmpLeave() {
+  const empId = currentEmpId;
+  if (!empId) return;
+  const cat = LCATS.find(c => c.id === empSelLCat);
+  const start = document.getElementById('emp-lv-start').value;
+  const end = document.getElementById('emp-lv-end').value || start;
+  const reason = document.getElementById('emp-lv-reason').value;
+  if (!start) { showEmpLvMsg('開始日を選択してください', 'w'); return; }
+  const sub = cat.subtypes ? document.getElementById('emp-lv-sub').value : null;
+  let days = 0;
+  if (sub === '午前半休' || sub === '午後半休') { days = 0.5; }
+  else { const d1 = new Date(start), d2 = new Date(end); for (let d = new Date(d1); d <= d2; d.setDate(d.getDate()+1)) { if (!isHol(d.toISOString().split('T')[0])) days++; } }
+  if (cat.id === 'annual') {
+    const e = emps.find(x => x.id === empId);
+    const rem = curGranted(e.joinDate) - calcUsed(empId, 'annual');
+    if (rem < days) { showEmpLvMsg('年次有給の残日数が不足しています', 'w'); return; }
+  }
+  if (cat.maxDays) { if (calcUsed(empId, cat.id) + days > cat.maxDays) { showEmpLvMsg(`${cat.name}は年${cat.maxDays}日までです`, 'w'); return; } }
+  if (!lRecs[empId]) lRecs[empId] = [];
+  lRecs[empId].push({ date: start, end, cat: cat.id, sub, days, reason, label: cat.name, status: 'pending', appliedAt: new Date().toLocaleString('ja-JP') });
+  document.getElementById('emp-lv-start').value = '';
+  document.getElementById('emp-lv-end').value = '';
+  document.getElementById('emp-lv-reason').value = '';
+  showEmpLvMsg(`申請しました（${cat.name} ${days}日）`, 's');
+  const e = emps.find(x => x.id === empId);
+  if (e) renderLeaveBalance(e);
+  saveData();
+  updateNotifyBadge();
+}
+function showEmpLvMsg(txt, type) {
+  const el = document.getElementById('leave-req-msg');
+  el.style.cssText = `padding:10px 14px;border-radius:12px;font-size:13px;font-weight:700;margin-bottom:12px;background:${type==='s'?'var(--green-light)':type==='w'?'var(--orange-light)':'var(--main-sub)'};color:${type==='s'?'var(--green)':type==='w'?'var(--orange)':'var(--main)'}`;
+  el.textContent = txt;
+  setTimeout(() => el.textContent = '', 3500);
+}
+
+// ===== 休暇残数 折りたたみ =====
+function toggleLeaveBalance() {
+  const body = document.getElementById('leave-balance');
+  const arrow = document.getElementById('leave-bal-arrow');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  arrow.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+// ===== ADMIN =====
+let adminLoginTime = null;
+function doAdminLogin() {
+  const pw = document.getElementById('admin-pw-input').value;
+  const err = document.getElementById('admin-login-error');
+  if (pw === adminPassword) {
+    err.style.display = 'none';
+    adminLoggedIn = true;
+    adminLoginTime = new Date();
+    showScreen('screen-admin');
+    renderEmpList(); renderAtt(); syncAdminSels(); updateNotifyBadge();
+  } else {
+    err.style.display = 'block';
+    document.getElementById('admin-pw-input').value = '';
+  }
+}
+function adminLogout() {
+  adminLoggedIn = false;
+  goToMode();
+}
+function toggleAdminEye() {
+  const inp = document.getElementById('admin-pw-input');
+  const ico = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    inp.type = 'password';
+    ico.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+function switchToAdmin() {
+  if (adminLoggedIn) { showScreen('screen-admin'); renderEmpList(); renderAtt(); syncAdminSels(); }
+  else goToAdminLogin();
+}
+function switchToStaff() { goToSelect(); }
+function changePassword() {
+  const cur=document.getElementById('pw-current').value;
+  const nw=document.getElementById('pw-new').value;
+  const cf=document.getElementById('pw-confirm').value;
+  if(cur!==adminPassword){showMsg('pw-msg','現在のパスワードが違います','w');return;}
+  if(!nw||nw.length<4){showMsg('pw-msg','4文字以上で入力してください','i');return;}
+  if(nw!==cf){showMsg('pw-msg','パスワードが一致しません','w');return;}
+  adminPassword=nw;saveData();
+  document.getElementById('pw-current').value='';document.getElementById('pw-new').value='';document.getElementById('pw-confirm').value='';
+  showMsg('pw-msg','変更しました','s');
+}
+
+// ===== ADMIN TABS =====
+let selLCat='annual',editEmpId=null,editChId=null,editChEmpId=null,editSpEmpId=null;
+function atab(t,el){document.querySelectorAll('.asec').forEach(s=>s.classList.remove('on'));document.querySelectorAll('.anb').forEach(b=>b.classList.remove('on'));document.getElementById('asec-'+t).classList.add('on');el.classList.add('on');syncAdminSels();if(t==='emp')renderEmpList();if(t==='family')renderFamily();if(t==='bday')renderBday();if(t==='school')renderSchool();if(t==='att')renderAtt();if(t==='history')renderHistory();if(t==='leave')renderLeave();if(t==='calendar')renderCalendar();if(t==='notify')renderNotify();}
+
+// ===== CALENDAR =====
+let calYear = TODAY.getFullYear();
+let calMonth = TODAY.getMonth(); // 0-indexed
+
+function calPrevMonth(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNextMonth(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+function calGoToday(){ calYear=TODAY.getFullYear(); calMonth=TODAY.getMonth(); renderCalendar(); }
+
+// 承認済み休暇をフラット展開（日付単位）
+function getApprovedLeaveDays(year, month) {
+  // { 'YYYY-MM-DD': [{empName, cat, label}] }
+  const map = {};
+  const pad = n => String(n).padStart(2,'0');
+  emps.forEach(e => {
+    (lRecs[e.id]||[]).filter(r => r.status==='approved').forEach(r => {
+      const start = new Date(r.date+'T00:00:00');
+      const end   = new Date((r.end||r.date)+'T00:00:00');
+      for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
+        if(d.getFullYear()===year && d.getMonth()===month){
+          const key = `${year}-${pad(month+1)}-${pad(d.getDate())}`;
+          if(!map[key]) map[key]=[];
+          map[key].push({empId:e.id, empName:e.name, cat:r.cat, label:r.label||r.cat, sub:r.sub});
+        }
+      }
+    });
+  });
+  return map;
+}
+
+function renderCalendar(){
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('cal-title').textContent = `${calYear}年 ${months[calMonth]}`;
+
+  // sync employee filter select
+  const empSel = document.getElementById('cal-emp-filter');
+  if(empSel){
+    const v = empSel.value;
+    empSel.innerHTML = '<option value="">全員</option>';
+    emps.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.name; empSel.appendChild(o); });
+    empSel.value = v;
+  }
+  const filterEmpId = empSel ? empSel.value : '';
+
+  const leaveMap = getApprovedLeaveDays(calYear, calMonth);
+  const pad = n=>String(n).padStart(2,'0');
+
+  // Build calendar grid
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  const dows = ['日','月','火','水','木','金','土'];
+  let html = '<div class="cal-grid-wrap"><table class="cal-table"><thead><tr>';
+  dows.forEach((d,i)=>{ html+=`<th class="cal-dow${i===0?' sun':i===6?' sat':''}">${d}</th>`; });
+  html += '</tr></thead><tbody><tr>';
+
+  let day = 1;
+  let cells = 0;
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  for(let i=0; i<totalCells; i++){
+    const col = i % 7;
+    if(i>0 && col===0) html += '</tr><tr>';
+
+    let dateNum, dateStr, isCurrentMonth, isSun=col===0, isSat=col===6;
+
+    if(i < firstDay){
+      dateNum = daysInPrev - firstDay + i + 1;
+      dateStr = `${calYear}-${pad(calMonth===0?12:calMonth)}-${pad(dateNum)}`;
+      isCurrentMonth = false;
+    } else if(day <= daysInMonth){
+      dateNum = day;
+      dateStr = `${calYear}-${pad(calMonth+1)}-${pad(dateNum)}`;
+      isCurrentMonth = true;
+      day++;
+    } else {
+      const rem = i - firstDay - daysInMonth + 1;
+      dateNum = rem;
+      dateStr = `${calYear}-${pad(calMonth===11?1:calMonth+2)}-${pad(rem)}`;
+      isCurrentMonth = false;
+    }
+
+    const isToday = dateStr === TODAYSTR;
+    const hol = isCurrentMonth && isHol(dateStr);
+    const holLabel = hol ? holLbl(dateStr) : '';
+
+    let cls = 'cal-cell';
+    if(!isCurrentMonth) cls += ' other-month';
+    if(isToday) cls += ' today';
+    if(hol) cls += ' holiday-day';
+    else if(isSat) cls += ' sat-day';
+    else if(isSun) cls += ' sun-day';
+
+    html += `<td class="${cls}">`;
+    html += `<div class="cal-day-num">${dateNum}</div>`;
+
+    // 祝日ラベル
+    if(hol && isCurrentMonth){
+      html += `<span class="cal-chip hol">${holLabel}</span>`;
+    }
+
+    // 休暇チップ
+    if(isCurrentMonth && leaveMap[dateStr]){
+      const entries = filterEmpId
+        ? leaveMap[dateStr].filter(x=>x.empId==filterEmpId)
+        : leaveMap[dateStr];
+      entries.forEach(lv=>{
+        const name = filterEmpId ? (lv.sub||lv.label) : lv.empName;
+        html += `<span class="cal-chip ${lv.cat}" title="${lv.empName}：${lv.label}${lv.sub?' ('+lv.sub+')':''}">${name}</span>`;
+      });
+    }
+
+    html += '</td>';
+    cells++;
+  }
+
+  html += '</tr></tbody></table></div>';
+  document.getElementById('cal-grid').innerHTML = html;
+
+  // 当月一覧
+  renderCalList(leaveMap, filterEmpId, pad);
+}
+
+function renderCalList(leaveMap, filterEmpId, pad){
+  const catNames = {annual:'年次有給休暇',sick:'病欠',birthday:'誕生日休暇',compensatory:'振替休暇',school:'学校行事'};
+  const catCls   = {annual:'abdg-p',sick:'abdg-r',birthday:'abdg-o',compensatory:'abdg-o',school:'abdg-g'};
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const dl=['日','月','火','水','木','金','土'];
+
+  // gather approved leaves that overlap this month
+  const y=calYear, m=calMonth;
+  const rows=[];
+  emps.forEach(e=>{
+    if(filterEmpId && e.id!=filterEmpId) return;
+    (lRecs[e.id]||[]).filter(r=>r.status==='approved').forEach(r=>{
+      const s=new Date(r.date+'T00:00:00');
+      const en=new Date((r.end||r.date)+'T00:00:00');
+      const mStart=new Date(y,m,1), mEnd=new Date(y,m+1,0);
+      if(en<mStart || s>mEnd) return;
+      rows.push({e,r});
+    });
+  });
+  rows.sort((a,b)=>a.r.date.localeCompare(b.r.date));
+
+  const wrap=document.getElementById('cal-list');
+  if(!rows.length){
+    wrap.innerHTML=`<div style="padding:16px 0;text-align:center;color:#8A8A98;font-size:13px">
+      ${months[m]}の承認済み休暇はありません
+    </div>`;
+    return;
+  }
+  wrap.innerHTML=rows.map(({e,r})=>{
+    const sd=new Date(r.date+'T00:00:00');
+    const dateLabel = r.end&&r.end!==r.date
+      ? `${r.date.slice(5).replace('-','/')}（${dl[sd.getDay()]}） 〜 ${r.end.slice(5).replace('-','/')}`
+      : `${r.date.slice(5).replace('-','/')}（${dl[sd.getDay()]}）`;
+    const cc = catCls[r.cat]||'abdg-gr';
+    const cn = catNames[r.cat]||r.cat;
+    return `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F0EEF8;flex-wrap:wrap">
+      <div style="width:28px;height:28px;border-radius:9px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${e.name.slice(-2)}</div>
+      <div style="font-size:13px;font-weight:700;min-width:80px">${e.name}</div>
+      <span class="abdg ${cc}">${cn}${r.sub?' · '+r.sub:''}</span>
+      <div style="font-size:12px;color:#8A8A98;flex:1">${dateLabel}</div>
+      <div style="font-size:12px;font-weight:700;color:#5B4CC4">${r.days}日</div>
+    </div>`;
+  }).join('');
+}
+
+function updateNotifyBadge(){
+  const count = Object.values(lRecs).flat().filter(r=>r.status==='pending').length;
+  const badge = document.getElementById('notify-badge');
+  if(!badge) return;
+  if(count>0){ badge.textContent=count; badge.style.display='inline'; }
+  else badge.style.display='none';
+}
+
+function renderNotify(){
+  const filter = document.getElementById('notify-filter').value;
+  const wrap = document.getElementById('notify-list');
+  const catNames = {annual:'年次有給休暇',sick:'病欠',birthday:'誕生日休暇',compensatory:'振替休暇',school:'学校行事'};
+  const catColors = {annual:'abdg-p',sick:'abdg-r',birthday:'abdg-o',compensatory:'abdg-o',school:'abdg-g'};
+
+  // gather all requests with employee info
+  const all = [];
+  emps.forEach(e => {
+    (lRecs[e.id]||[]).forEach((r,i) => {
+      const s = r.status || 'pending'; // 旧データはpending扱い
+      if(filter!=='all' && s!==filter) return;
+      all.push({e, r, idx:i});
+    });
+  });
+  // sort: pending first, then by appliedAt desc
+  all.sort((a,b)=>{
+    if(a.r.status==='pending' && b.r.status!=='pending') return -1;
+    if(b.r.status==='pending' && a.r.status!=='pending') return 1;
+    return (b.r.appliedAt||'').localeCompare(a.r.appliedAt||'');
+  });
+
+  if(!all.length){
+    wrap.innerHTML=`<div style="text-align:center;padding:32px 0;color:#8A8A98;font-size:14px">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 10px;opacity:.3"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+      ${filter==='pending'?'未対応の申請はありません':'申請がありません'}
+    </div>`;
+    return;
+  }
+
+  const statusLabel = {pending:'未対応',approved:'承認済み',rejected:'却下済み'};
+  const statusColor = {pending:'abdg-o',approved:'abdg-g',rejected:'abdg-r'};
+
+  wrap.innerHTML = all.map(({e,r,idx})=>{
+    const st = r.status || 'pending';
+    const dateRange = r.end && r.end!==r.date ? `${r.date} 〜 ${r.end}` : r.date;
+    const catC = catColors[r.cat]||'abdg-gr';
+    const catN = catNames[r.cat]||r.cat;
+    const isPending = st==='pending';
+    return `
+    <div style="border:1.5px solid ${isPending?'#E07C2A':'#E5E2F0'};border-radius:16px;padding:16px 18px;margin-bottom:10px;background:${isPending?'#FFFCF7':'#fff'}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:12px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">${e.name.slice(-2)}</div>
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#1F1F29">${e.name}</div>
+            <div style="font-size:12px;color:#8A8A98">${e.dept||''} · ${e.type}</div>
+          </div>
+        </div>
+        <span class="abdg ${statusColor[st]}">${statusLabel[st]}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <span class="abdg ${catC}">${catN}</span>
+        ${r.sub?`<span class="abdg abdg-gr">${r.sub}</span>`:''}
+        <span style="font-size:12px;color:#1F1F29;font-weight:600;display:flex;align-items:center;gap:4px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${dateRange}
+        </span>
+        <span style="font-size:12px;color:#5B4CC4;font-weight:700">${r.days}日</span>
+      </div>
+      ${r.reason?`<div style="font-size:12px;color:#8A8A98;margin-bottom:10px;padding:8px 12px;background:#F7F7FB;border-radius:10px">理由: ${r.reason}</div>`:''}
+      ${r.appliedAt?`<div style="font-size:11px;color:#B0B0BE;margin-bottom:${isPending?'12':'0'}px">申請日時: ${r.appliedAt}</div>`:''}
+      ${isPending?`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="rejectLeave(${e.id},${idx})" style="border:2px solid #E5E2F0;border-radius:12px;padding:10px;font-size:14px;font-weight:700;color:#8A8A98;background:#fff;cursor:pointer;font-family:inherit;transition:all 0.15s"
+          onmouseover="this.style.borderColor='#C43636';this.style.color='#C43636'" onmouseout="this.style.borderColor='#E5E2F0';this.style.color='#8A8A98'">
+          却下
+        </button>
+        <button onclick="approveLeave(${e.id},${idx})" style="border:2px solid #5B4CC4;border-radius:12px;padding:10px;font-size:14px;font-weight:800;color:#fff;background:#5B4CC4;cursor:pointer;font-family:inherit;transition:all 0.15s"
+          onmouseover="this.style.background='#4538A8'" onmouseout="this.style.background='#5B4CC4'">
+          承認する
+        </button>
+      </div>`:`
+      ${r.resolvedAt?`<div style="font-size:11px;color:#B0B0BE">${st==='approved'?'承認':'却下'}日時: ${r.resolvedAt}</div>`:''}
+      `}
+    </div>`;
+  }).join('');
+}
+
+function approveLeave(empId, idx){
+  if(!lRecs[empId]||!lRecs[empId][idx]) return;
+  lRecs[empId][idx].status = 'approved';
+  lRecs[empId][idx].resolvedAt = new Date().toLocaleString('ja-JP');
+  saveData();
+  updateNotifyBadge();
+  renderNotify();
+  const lv = document.getElementById('lv-emp-sel');
+  if(lv && parseInt(lv.value)===empId) renderLeave();
+  if(document.getElementById('asec-calendar').classList.contains('on')) renderCalendar();
+}
+function rejectLeave(empId, idx){
+  if(!lRecs[empId]||!lRecs[empId][idx]) return;
+  lRecs[empId][idx].status = 'rejected';
+  lRecs[empId][idx].resolvedAt = new Date().toLocaleString('ja-JP');
+  saveData();
+  updateNotifyBadge();
+  renderNotify();
+}
+function syncAdminSels(){['fam-sel','sc-emp-sel','lv-emp-sel','hist-emp-sel'].forEach(id=>{const sel=document.getElementById(id);if(!sel)return;const v=sel.value;const isAll=id==='sc-emp-sel'||id==='hist-emp-sel';sel.innerHTML=isAll?'<option value="">全員</option>':'<option value="">-- 従業員を選択 --</option>';emps.forEach(e=>{const o=document.createElement('option');o.value=e.id;o.textContent=e.name;sel.appendChild(o);});if(v)sel.value=v;});
+// set default month
+const hm=document.getElementById('hist-month');if(hm&&!hm.value){const n=new Date();hm.value=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}}
+function togglePart(){document.getElementById('part-area').style.display=document.getElementById('ef-type').value==='パート・アルバイト'?'block':'none';}
+
+function renderEmpList(){const q=(document.getElementById('emp-search').value||'').toLowerCase();const tb=document.getElementById('emp-list');tb.innerHTML='';const f=emps.filter(e=>!q||e.name.includes(q)||e.kana.includes(q));f.forEach(e=>{const granted=curGranted(e.joinDate);const used=calcUsed(e.id,'annual');const rem=granted-used;const addr=[e.pref,e.city].filter(Boolean).join('');tb.innerHTML+=`<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:30px;height:30px;border-radius:10px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${e.name.slice(-2)}</div><div><div style="font-weight:700;font-size:12px">${e.name}</div><div style="font-size:10px;color:#8A8A98">${e.kana}</div></div></div></td><td style="font-size:11px">${e.mobile||'-'}</td><td style="font-size:11px">${addr||'-'}</td><td style="font-size:11px">${e.joinDate}</td><td><span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span></td><td><span style="font-weight:700;color:${rem<=3?'#C43636':'#5B4CC4'}">${rem}日</span></td><td><button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button></td></tr>`;});if(!f.length)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#8A8A98">該当なし</td></tr>';}
+
+function openEmpForm(id){editEmpId=id;document.getElementById('ef-title').textContent=id?'従業員情報編集':'新規従業員登録';document.getElementById('ef-del').style.display=id?'block':'none';document.getElementById('emp-detail').style.display='none';if(id){const e=emps.find(x=>x.id===id);['name','kana','dept','mobile','ename','ephone','zip','city','addr','pin'].forEach(f=>{document.getElementById('ef-'+f).value=e[f==='name'?'name':f==='kana'?'kana':f]==='dept'?e.dept:e[f]||'';});document.getElementById('ef-name').value=e.name;document.getElementById('ef-kana').value=e.kana||'';document.getElementById('ef-birth').value=e.birth||'';document.getElementById('ef-join').value=e.joinDate;document.getElementById('ef-dept').value=e.dept||'';document.getElementById('ef-type').value=e.type;document.getElementById('ef-start').value=e.start;document.getElementById('ef-end').value=e.end;document.getElementById('ef-break').value=e.brk;document.getElementById('ef-mobile').value=e.mobile||'';document.getElementById('ef-ename').value=e.ename||'';document.getElementById('ef-ephone').value=e.ephone||'';document.getElementById('ef-zip').value=e.zip||'';document.getElementById('ef-pref').value=e.pref||'';document.getElementById('ef-city').value=e.city||'';document.getElementById('ef-addr').value=e.addr||'';document.getElementById('ef-pin').value=e.pin||'';}else{['ef-name','ef-kana','ef-dept','ef-mobile','ef-ename','ef-ephone','ef-zip','ef-city','ef-addr','ef-pin'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-birth').value='';document.getElementById('ef-join').value=TODAYSTR;document.getElementById('ef-type').value='正社員';document.getElementById('ef-pref').value='';document.getElementById('ef-start').value='09:00';document.getElementById('ef-end').value='17:30';document.getElementById('ef-break').value=0;}togglePart();document.getElementById('emp-form').style.display='block';document.getElementById('emp-form').scrollIntoView({behavior:'smooth',block:'nearest'});}
+function closeEmpForm(){document.getElementById('emp-form').style.display='none';}
+function saveEmp(){const name=document.getElementById('ef-name').value.trim();const join=document.getElementById('ef-join').value;if(!name||!join){showMsg('ef-msg','氏名と入社日は必須です','i');return;}const pin=document.getElementById('ef-pin').value;if(!pin||!/^\d{4}$/.test(pin)){showMsg('ef-msg','パスワードは4桁の数字で入力してください','w');return;}const type=document.getElementById('ef-type').value;const d={name,kana:document.getElementById('ef-kana').value,birth:document.getElementById('ef-birth').value,joinDate:join,dept:document.getElementById('ef-dept').value,type,start:type==='パート・アルバイト'?document.getElementById('ef-start').value:WS,end:type==='パート・アルバイト'?document.getElementById('ef-end').value:WE,brk:type==='パート・アルバイト'?parseInt(document.getElementById('ef-break').value)||0:WB,mobile:document.getElementById('ef-mobile').value,ename:document.getElementById('ef-ename').value,ephone:document.getElementById('ef-ephone').value,zip:document.getElementById('ef-zip').value,pref:document.getElementById('ef-pref').value,city:document.getElementById('ef-city').value,addr:document.getElementById('ef-addr').value,pin};if(editEmpId){const i=emps.findIndex(e=>e.id===editEmpId);emps[i]={...emps[i],...d};}else{d.id=nEmpId++;emps.push(d);children[d.id]=[];lRecs[d.id]=[];}closeEmpForm();renderEmpList();syncAdminSels();saveData();}
+function delEmp(){if(!confirm('削除しますか？'))return;emps=emps.filter(e=>e.id!==editEmpId);closeEmpForm();renderEmpList();saveData();}
+
+function renderFamily(){const empId=parseInt(document.getElementById('fam-sel').value);const fc=document.getElementById('fam-content');if(!empId){fc.innerHTML='<p style="color:#8A8A98;font-size:13px">従業員を選択してください</p>';return;}const sp=spouses[empId];const chs=children[empId]||[];let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div class="act" style="margin-bottom:0">配偶者</div><button class="abtn abtn-sm ${sp?'':'abtn-p'}" onclick="openSpForm(${empId})">${sp?'編集':'+ 登録'}</button></div>`;if(sp){const age=sp.birth?getAge(sp.birth):null;html+=`<div class="spouse-box"><div style="font-size:13px;font-weight:700">${sp.name}</div><div class="info-row"><span class="info-lbl">生年月日</span><span>${sp.birth||'-'}${age!==null?' ('+age+'歳)':''}</span></div></div>`;}else html+=`<p style="font-size:12px;color:#8A8A98;padding:6px 0 9px">配偶者が登録されていません</p>`;html+=`<div class="adiv"></div><div style="display:flex;justify-content:space-between;align-items:center"><div class="act" style="margin-bottom:0">子供（${chs.length}人）</div><button class="abtn abtn-p abtn-sm" onclick="openChForm(${empId},null)">+ 追加</button></div>`;if(!chs.length)html+=`<p style="font-size:12px;color:#8A8A98;padding:4px 0">子供の登録がありません</p>`;chs.forEach(ch=>{const age=getAge(ch.birth);html+=`<div class="child-box"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700">${ch.name||'お子様'}</div><div style="font-size:11px;color:#8A8A98">${ch.birth} (${age}歳)</div></div><button class="abtn abtn-sm" onclick="openChForm(${empId},${ch.id})">編集</button></div><div class="tl-row" style="margin-top:8px">`;sEvs(ch).forEach(ev=>{html+=`<div class="tl-it" style="${ev.date<=TODAYSTR?'opacity:.45':''}"><div style="font-size:10px;color:#8A8A98">${ev.year}/${ev.month}</div><div class="tl-e abdg-p">${ev.label}</div></div>`;});html+=`</div></div>`;});fc.innerHTML=html;}
+function openSpForm(empId){editSpEmpId=empId;const sp=spouses[empId];document.getElementById('sp-name').value=sp?sp.name:'';document.getElementById('sp-kana').value=sp?sp.kana:'';document.getElementById('sp-birth').value=sp?sp.birth:'';document.getElementById('sp-job').value=sp?sp.job:'';document.getElementById('sp-note').value=sp?sp.note:'';document.getElementById('sp-form-card').style.display='block';}
+function saveSpouse(){spouses[editSpEmpId]={name:document.getElementById('sp-name').value,kana:document.getElementById('sp-kana').value,birth:document.getElementById('sp-birth').value,job:document.getElementById('sp-job').value,note:document.getElementById('sp-note').value};document.getElementById('sp-form-card').style.display='none';renderFamily();renderBday();saveData();}
+function openChForm(empId,chId){editChEmpId=empId;editChId=chId;document.getElementById('cf-title').textContent=chId?'子供情報編集':'子供を追加';document.getElementById('cf-del').style.display=chId?'block':'none';if(chId){const ch=(children[empId]||[]).find(c=>c.id===chId);document.getElementById('cf-name').value=ch.name||'';document.getElementById('cf-birth').value=ch.birth;document.getElementById('cf-gender').value=ch.gender||'';document.getElementById('cf-kg').value=ch.kgAge||3;document.getElementById('cf-note').value=ch.note||'';}else{['cf-name','cf-note'].forEach(i=>document.getElementById(i).value='');document.getElementById('cf-birth').value='';document.getElementById('cf-gender').value='';document.getElementById('cf-kg').value='3';}document.getElementById('ch-form-card').style.display='block';}
+function saveChild(){const birth=document.getElementById('cf-birth').value;if(!birth)return;const d={name:document.getElementById('cf-name').value,birth,gender:document.getElementById('cf-gender').value,kgAge:parseInt(document.getElementById('cf-kg').value)||3,note:document.getElementById('cf-note').value};if(!children[editChEmpId])children[editChEmpId]=[];if(editChId){const i=children[editChEmpId].findIndex(c=>c.id===editChId);children[editChEmpId][i]={...children[editChEmpId][i],...d};}else{d.id=nChId++;children[editChEmpId].push(d);}document.getElementById('ch-form-card').style.display='none';renderFamily();saveData();}
+function delChild(){if(!confirm('削除しますか？'))return;children[editChEmpId]=children[editChEmpId].filter(c=>c.id!==editChId);document.getElementById('ch-form-card').style.display='none';renderFamily();saveData();}
+
+function renderBday(){const days=parseInt(document.getElementById('bday-range').value)||90;let all=[];emps.forEach(e=>{if(e.birth)all.push({name:e.name,birth:e.birth,role:'本人'});if(spouses[e.id]&&spouses[e.id].birth)all.push({name:spouses[e.id].name,birth:spouses[e.id].birth,role:'配偶者（'+e.name+'）'});});all=all.map(p=>{const nb=nxtBday(p.birth);return{...p,next:nb,diff:dUntil(nb)};}).sort((a,b)=>a.diff-b.diff);const up=all.filter(p=>p.diff<=days);document.getElementById('bday-list').innerHTML=up.length?up.map(p=>`<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #F0EEF8"><div style="flex:1"><div style="font-size:13px;font-weight:700">${p.name}</div><div style="font-size:11px;color:#8A8A98">${p.role} · ${p.birth}</div></div><div style="font-size:12px">${p.diff===0?'<span class="abdg abdg-p">今日</span>':'<span style="color:#E07C2A;font-weight:700">'+p.diff+'日後</span>'}</div></div>`).join(''):`<p style="font-size:12px;color:#8A8A98">今後${days}日以内に誕生日の方はいません</p>`;const tb=document.getElementById('bday-all');tb.innerHTML='';all.forEach(p=>{const age=getAge(p.birth);tb.innerHTML+=`<tr><td><strong>${p.name}</strong></td><td><span class="abdg abdg-gr">${p.role}</span></td><td style="font-size:11px">${p.birth}</td><td>${age}歳</td><td style="font-size:11px">${p.next.getMonth()+1}月${p.next.getDate()}日</td><td style="font-size:11px">${p.diff===0?'<span class="abdg abdg-p">今日</span>':p.diff+'日'}</td></tr>`;});if(!all.length)tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8A8A98">データなし</td></tr>';}
+
+function sEvs(child){const b=new Date(child.birth+'T00:00:00');const by=b.getFullYear();const kg=parseInt(child.kgAge)||3;const evs=[];const add=(y,m,l)=>evs.push({year:y,month:m,label:l,date:`${y}-${String(m).padStart(2,'0')}-01`});const kgy=by+kg+(b.getMonth()>=3?1:0);add(kgy,4,'幼稚園入園');add(kgy+3,3,'幼稚園卒園');const ey=by+6+(b.getMonth()>=3?1:0);add(ey,4,'小学校入学');add(ey+6,3,'小学校卒業');const my=ey+6;add(my,4,'中学校入学');add(my+3,3,'中学校卒業');const hy=my+3;add(hy,4,'高校入学');add(hy+3,3,'高校卒業');return evs.sort((a,b)=>a.date.localeCompare(b.date));}
+function sStage(child){const evs=sEvs(child);for(let i=0;i<evs.length;i++){const ev=evs[i];const nx=evs[i+1];if(ev.date<=TODAYSTR&&(!nx||nx.date>TODAYSTR)){return ev.label.includes('入園')||ev.label.includes('入学')?ev.label.replace('入園','在園').replace('入学','在学'):'就学前';}}return TODAYSTR<(evs[0]||{}).date?'未就園':'卒業後';}
+function ageAt(birth,evDate){const b=new Date(birth+'T00:00:00');const e=new Date(evDate+'T00:00:00');let a=e.getFullYear()-b.getFullYear();if(e.getMonth()<b.getMonth()||(e.getMonth()===b.getMonth()&&e.getDate()<b.getDate()))a--;return a;}
+function renderSchool(){const empId=document.getElementById('sc-emp-sel').value;const filter=document.getElementById('sc-filter').value;const in1y=new Date(TODAY);in1y.setFullYear(in1y.getFullYear()+1);const in1yS=in1y.toISOString().split('T')[0];let rows=[];emps.forEach(emp=>{if(empId&&emp.id!=empId)return;(children[emp.id]||[]).forEach(ch=>{sEvs(ch).forEach(ev=>rows.push({emp,ch,ev}));});});rows.sort((a,b)=>a.ev.date.localeCompare(b.ev.date));if(filter==='upcoming')rows=rows.filter(r=>r.ev.date>=TODAYSTR&&r.ev.date<=in1yS);else if(filter!=='all')rows=rows.filter(r=>r.ev.year===parseInt(filter));const tb=document.getElementById('sc-table');tb.innerHTML='';if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#8A8A98">該当なし</td></tr>';return;}rows.forEach(({emp,ch,ev})=>{const past=ev.date<TODAYSTR;const near=!past&&ev.date<=in1yS;tb.innerHTML+=`<tr style="${past?'opacity:.5':''}"><td><span class="abdg abdg-p">${ev.label}</span>${near?' ★':''}</td><td style="font-size:11px">${ev.year}/${ev.month}</td><td style="font-size:11px">${emp.name}</td><td style="font-size:11px">${ch.name||'お子様'}</td><td style="font-size:11px;color:#8A8A98">${ageAt(ch.birth,ev.date)}歳</td></tr>`;});const ul=document.getElementById('sc-upcoming');ul.innerHTML='';const up=rows.filter(r=>{const d=(new Date(r.ev.date)-TODAY)/864e5;return d>=0&&d<=180;});if(!up.length){ul.innerHTML='<p style="font-size:12px;color:#8A8A98">今後6ヶ月のイベントはありません</p>';return;}up.slice(0,8).forEach(({emp,ch,ev})=>{const diff=Math.round((new Date(ev.date)-TODAY)/864e5);ul.innerHTML+=`<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #F0EEF8"><span class="abdg abdg-p">${ev.label}</span><span style="font-size:11px;flex:1">${emp.name} · ${ch.name||'お子様'}</span><span style="font-size:11px;color:#8A8A98">${ev.year}年${ev.month}月 <span style="color:#E07C2A">${diff}日後</span></span></div>`;});}
+
+function renderAtt(){const hol=isHol(TODAYSTR);if(hol)document.getElementById('hol-notice2').innerHTML=`<div class="al al-w" style="margin-bottom:8px">本日は${holLbl(TODAYSTR)}（定休日）です</div>`;const tb=document.getElementById('att-list');if(!tb)return;tb.innerHTML='';emps.forEach(e=>{const rec=attendance[`${e.id}_${TODAYSTR}`]||{};const status=getAttendanceStatus(e.id);const statusMap={not_started:'<span class="abdg abdg-gr">未打刻</span>',working:'<span class="abdg abdg-g">勤務中</span>',on_break:'<span class="abdg abdg-o">休憩中</span>',finished:'<span class="abdg abdg-p">退勤済</span>'};const mins=rec.in&&rec.out?calcWM(e,rec.in,rec.out,rec.breakStart,rec.breakEnd):0;tb.innerHTML+=`<tr><td>${e.name}</td><td><span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type==='パート・アルバイト'?'パート':e.type}</span></td><td>${rec.in||'-'}</td><td>${rec.breakStart||'-'}</td><td>${rec.out||'-'}</td><td>${mins>0?fmtM(mins):'--'}</td><td>${hol?'<span class="abdg abdg-gr">休日</span>':statusMap[status]||''}</td></tr>`;});}
+
+function renderHistory(){
+  const empFilter=document.getElementById('hist-emp-sel').value;
+  const monthVal=document.getElementById('hist-month').value;
+  const wrap=document.getElementById('hist-table-wrap');
+  const dl=['日','月','火','水','木','金','土'];
+  // collect matching keys
+  const rows=[];
+  Object.keys(attendance).forEach(k=>{
+    const[eid,date]=k.split('_');
+    if(monthVal&&!date.startsWith(monthVal))return;
+    if(empFilter&&eid!=empFilter)return;
+    const e=emps.find(x=>x.id==eid);
+    if(!e)return;
+    const rec=attendance[k];
+    rows.push({e,date,rec});
+  });
+  // also include today if no records
+  rows.sort((a,b)=>b.date.localeCompare(a.date)||a.e.name.localeCompare(b.e.name));
+  if(!rows.length){wrap.innerHTML='<p style="color:#8A8A98;font-size:13px;padding:8px 0">打刻記録がありません</p>';return;}
+  let html='<table><thead><tr><th>日付</th><th>氏名</th><th>出勤</th><th>休憩開始</th><th>休憩終了</th><th>退勤</th><th>実働</th><th>状態</th></tr></thead><tbody>';
+  rows.forEach(({e,date,rec})=>{
+    const d=new Date(date+'T00:00:00');
+    const hol=isHol(date);
+    const mins=rec.in&&rec.out?calcWM(e,rec.in,rec.out,rec.breakStart,rec.breakEnd):0;
+    let stBadge='<span class="abdg abdg-gr">未打刻</span>';
+    if(hol)stBadge='<span class="abdg abdg-gr">休日</span>';
+    else if(rec.out)stBadge='<span class="abdg abdg-p">退勤済</span>';
+    else if(rec.breakStart&&!rec.breakEnd)stBadge='<span class="abdg abdg-o">休憩中</span>';
+    else if(rec.in)stBadge='<span class="abdg abdg-g">勤務中</span>';
+    html+=`<tr>
+      <td style="font-size:11px;white-space:nowrap">${date.slice(5).replace('-','/')}（${dl[d.getDay()]}）</td>
+      <td style="font-size:12px;font-weight:700">${e.name}</td>
+      <td style="font-size:11px">${rec.in||'-'}</td>
+      <td style="font-size:11px">${rec.breakStart||'-'}</td>
+      <td style="font-size:11px">${rec.breakEnd||'-'}</td>
+      <td style="font-size:11px">${rec.out||'-'}</td>
+      <td style="font-size:11px">${mins>0?fmtM(mins):'--'}</td>
+      <td>${stBadge}</td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+let selLCatA='annual';
+function renderLeave(){const empId=parseInt(document.getElementById('lv-emp-sel').value);const info=document.getElementById('lv-info');if(!empId){info.style.display='none';return;}info.style.display='block';const e=emps.find(x=>x.id===empId);const granted=curGranted(e.joinDate);const annUsed=calcUsed(empId,'annual');const annRem=granted-annUsed;const sickUsed=calcUsed(empId,'sick');const bdayUsed=calcUsed(empId,'birthday');const schUsed=calcUsed(empId,'school');document.getElementById('lv-metrics').innerHTML=`<div class="metric"><div class="lbl">年次有給 残</div><div class="val" style="color:${annRem<=3?'#C43636':'#5B4CC4'}">${annRem}日</div></div><div class="metric"><div class="lbl">病欠 取得</div><div class="val" style="color:#C43636">${sickUsed}日</div></div><div class="metric"><div class="lbl">誕生日休暇 残</div><div class="val">${Math.max(0,1-bdayUsed)}日</div></div><div class="metric"><div class="lbl">学校行事 取得</div><div class="val" style="color:#1B9E6E">${schUsed}日</div></div>`;const grid=document.getElementById('leave-type-grid');grid.innerHTML='';LCATS.forEach(cat=>{const sel=selLCatA===cat.id;grid.innerHTML+=`<button class="lt-btn${sel?' sel':''}" onclick="selLTA('${cat.id}')"><span class="abdg ${cat.color}" style="margin-bottom:4px;display:inline-block">${cat.icon} ${cat.name}</span><span class="ld">${cat.desc}</span></button>`;});updLFA(empId);const grants=calcGrants(e.joinDate);const gtb=document.getElementById('lv-grant-table');gtb.innerHTML='';grants.forEach(g=>{const past=g.date<=TODAYSTR;gtb.innerHTML+=`<tr style="${past?'':'opacity:.5'}"><td style="font-size:11px">${g.date}</td><td>${g.label}</td><td><strong>${g.days}日</strong> ${past?'<span class="abdg abdg-g">付与済</span>':'<span class="abdg abdg-gr">予定</span>'}</td></tr>`;});const htb=document.getElementById('lv-hist');htb.innerHTML='';const nMap={annual:'年次有給',sick:'病欠',birthday:'誕生日休暇',compensatory:'振替休暇',school:'学校行事'};const recs=(lRecs[empId]||[]).slice().reverse();recs.forEach(r=>{htb.innerHTML+=`<tr><td style="font-size:11px">${r.date}${r.end&&r.end!==r.date?'〜'+r.end:''}</td><td><span class="abdg abdg-p">${nMap[r.cat]||r.cat}</span></td><td style="font-size:11px">${r.sub||r.detail||''}</td><td>${r.days}日</td><td style="font-size:11px">${r.reason||''}</td></tr>`;});if(!recs.length)htb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#8A8A98">履歴なし</td></tr>';}
+function selLTA(id){selLCatA=id;renderLeave();}
+function updLFA(empId){const cat=LCATS.find(c=>c.id===selLCatA);if(!cat)return;const sta=document.getElementById('lv-subtype-area');const hra=document.getElementById('lv-holiday-ref-area');if(cat.subtypes){sta.style.display='block';const sel=document.getElementById('lv-subtype');sel.innerHTML='';cat.subtypes.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});}else sta.style.display='none';hra.style.display=cat.hasHolidayRef?'block':'none';}
+function applyLeave(){const empId=parseInt(document.getElementById('lv-emp-sel').value);if(!empId)return;const cat=LCATS.find(c=>c.id===selLCatA);const start=document.getElementById('lv-start').value;const end=document.getElementById('lv-end').value||start;const reason=document.getElementById('lv-reason').value;if(!start){showMsg('lv-msg','日付を選択してください','i');return;}const sub=cat.subtypes?document.getElementById('lv-subtype').value:null;const holRef=cat.hasHolidayRef?document.getElementById('lv-holiday-ref').value:null;let days=0;if(sub==='午前半休'||sub==='午後半休'){days=0.5;}else{const d1=new Date(start),d2=new Date(end);for(let d=new Date(d1);d<=d2;d.setDate(d.getDate()+1)){if(!isHol(d.toISOString().split('T')[0]))days++;}}if(cat.maxDays){const used=calcUsed(empId,cat.id);if(used+days>cat.maxDays){showMsg('lv-msg',`${cat.name}は年${cat.maxDays}日までです`,'w');return;}}if(cat.id==='annual'){const granted=curGranted(emps.find(e=>e.id===empId).joinDate);if(granted-calcUsed(empId,'annual')<days){showMsg('lv-msg','年次有給の残日数が不足しています','w');return;}}if(!lRecs[empId])lRecs[empId]=[];lRecs[empId].push({date:start,end,cat:cat.id,sub,detail:holRef?`振替元: ${holRef}`:null,days,reason,label:cat.name});document.getElementById('lv-start').value='';document.getElementById('lv-end').value='';document.getElementById('lv-reason').value='';if(cat.hasHolidayRef)document.getElementById('lv-holiday-ref').value='';saveData();renderLeave();showMsg('lv-msg','申請しました','s');}
+
+function showMsg(id,text,type){const el=document.getElementById(id);if(!el)return;el.className='al '+(type==='s'?'al-s':type==='w'?'al-w':'al-i');el.textContent=text;el.style.display='block';setTimeout(()=>el.style.display='none',3500);}
+
+// ===== TOAST =====
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ===== CLOCK TICK =====
+function updateClocks() {
+  const now = new Date();
+  const t = now.toLocaleTimeString('ja-JP');
+  const el = document.getElementById('clock-time');
+  if (el) el.textContent = t;
+}
+setInterval(updateClocks, 1000);
+updateClocks();
+
+// Set date
+const days = ['日','月','火','水','木','金','土'];
+const dateStr = `${TODAY.getFullYear()}年${TODAY.getMonth()+1}月${TODAY.getDate()}日（${days[TODAY.getDay()]}）`;
+document.getElementById('clock-date').textContent = dateStr;
+
+// Init
+renderStaffList('');
+</script>
+</body>
+</html>
