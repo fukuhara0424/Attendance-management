@@ -187,30 +187,31 @@ body {
 .page-title { font-size: 24px; font-weight: 900; color: var(--text); }
 .page-sub { font-size: 14px; color: var(--text-sub); margin-top: 2px; }
 
-.staff-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.staff-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 .staff-card {
   background: var(--card); border: 2px solid var(--border); border-radius: 18px;
-  padding: 16px 20px; display: flex; align-items: center; gap: 14px;
-  cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: left; width: 100%;
+  padding: 16px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer; transition: all 0.15s; font-family: inherit; text-align: center; width: 100%;
+  position: relative;
 }
 .staff-card:hover { border-color: var(--main); background: var(--main-sub); }
 .staff-card.selected { border-color: var(--main); background: var(--main-sub); }
 .staff-card.selected .staff-check { background: var(--main); border-color: var(--main); }
 .staff-card.selected .staff-check svg { display: block; }
 .staff-avatar {
-  width: 48px; height: 48px; border-radius: 16px;
+  width: 52px; height: 52px; border-radius: 16px;
   background: var(--main-sub); color: var(--main);
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; font-weight: 800; flex-shrink: 0;
 }
-.staff-info .s-name { font-size: 17px; font-weight: 700; color: var(--text); }
-.staff-info .s-dept { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+.staff-info .s-name { font-size: 15px; font-weight: 700; color: var(--text); }
 .staff-check {
-  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
-  margin-left: auto; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
+  position: absolute; top: 10px; right: 10px;
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; background: transparent;
 }
-.staff-check svg { display: none; width: 14px; height: 14px; color: #fff; }
+.staff-check svg { display: none; width: 11px; height: 11px; color: #fff; }
 
 .select-search {
   background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
@@ -1079,13 +1080,12 @@ function renderStaffList(query) {
   const filtered = emps.filter(e => !q || e.name.includes(q) || e.kana.includes(q));
   list.innerHTML = filtered.map(e => `
     <button class="staff-card${e.id===selectedEmpId?' selected':''}" onclick="selectStaff(${e.id})">
+      <div class="staff-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
       <div class="staff-avatar">${e.name.slice(-2)}</div>
       <div class="staff-info">
         <div class="s-name">${e.name}</div>
-        <div class="s-dept">${e.dept||''} · ${e.type}</div>
-      </div>
-      <div class="staff-check">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
     </button>
   `).join('');
@@ -1320,7 +1320,9 @@ function doPunchOut() {
   const rec = ensureRec(currentEmpId);
   rec.out = nowTime();
   refreshClock();
-  showToast(`退勤を記録しました　${rec.out}　お疲れさまでした`, 'success');
+  const _mins=calcWM(emps.find(x=>x.id===currentEmpId)||{type:'正社員',brk:WB},rec.in,rec.out,rec.breakStart,rec.breakEnd);
+  const _dur=_mins>0?` 実働: ${Math.floor(_mins/60)}時間${_mins%60>0?_mins%60+'分':''}`:''  ;
+  showToast(`退勤を記録しました　${rec.out}${_dur}　お疲れさまでした`, 'success');
   saveData();
   startAutoReturn();
 }
@@ -1860,7 +1862,7 @@ function renderEmpList(){
       <td style="font-size:11px">${e.joinDate}</td>
       <td>${typeBadge}</td>
       <td><span style="font-weight:700;color:${remColor}">${rem}日</span></td>
-      <td><button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button></td>
+      <td><div style="display:flex;gap:4px"><button class="abtn abtn-sm" onclick="showED(${e.id})">詳細</button><button class="abtn abtn-sm" onclick="openEmpForm(${e.id})">編集</button></div></td>
     </tr>`;
     // スマホカード
     cards.innerHTML+=`<div class="emp-card-item">
@@ -1868,7 +1870,7 @@ function renderEmpList(){
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:40px;height:40px;border-radius:12px;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">${e.name.slice(-2)}</div>
           <div>
-            <div style="font-size:16px;font-weight:800;color:#1F1F29">${e.name}</div>
+            <div style="font-size:16px;font-weight:800;color:#1F1F29">${e.name}${isTod(e.birth)?' 🎂':''}</div>
             <div style="font-size:12px;color:#8A8A98">${e.kana}</div>
           </div>
         </div>
@@ -1892,12 +1894,48 @@ function renderEmpList(){
   }
 }
 
+
+function showED(id){
+  const e=emps.find(x=>x.id===id);
+  document.getElementById('ed-title').textContent=e.name+' さんの詳細情報';
+  const age=e.birth?getAge(e.birth):null;
+  const granted=curGranted(e.joinDate);
+  const used=calcUsed(e.id,'annual');
+  document.getElementById('ed-content').innerHTML=`
+    <div style="background:#fafaf8;border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:44px;height:44px;border-radius:50%;background:#EEEAFE;color:#5B4CC4;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">${e.name.slice(-2)}</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">${e.name}${e.birth&&e.birth.slice(5)===TODAYSTR.slice(5)?' 🎂':''}</div>
+          <div style="font-size:11px;color:#8A8A98">${e.kana||''} / ${e.dept||'部署未設定'} / <span class="abdg ${e.type==='正社員'?'abdg-p':'abdg-o'}" style="font-size:10px">${e.type}</span></div>
+        </div>
+      </div>
+      <div class="info-row"><span class="info-lbl">生年月日</span><span>${e.birth||'-'}${age!==null?' ('+age+'歳)':''}</span></div>
+      <div class="info-row"><span class="info-lbl">入社日</span><span>${e.joinDate}</span></div>
+      <div class="info-row"><span class="info-lbl">有給残日数</span><span style="color:#5B4CC4;font-weight:700">${granted-used}日/${granted}日</span></div>
+      <div class="info-row"><span class="info-lbl">所定勤務</span><span>${e.type==='正社員'?'09:00〜17:30（休憩60分）':e.start+'〜'+e.end+'（休憩'+e.brk+'分）'}</span></div>
+    </div>
+    <div style="background:#fafaf8;border-radius:10px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#8A8A98;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em">連絡先</div>
+      <div class="info-row"><span class="info-lbl">携帯電話</span><span>${e.mobile||'-'}</span></div>
+      <div class="info-row"><span class="info-lbl">緊急連絡先</span><span>${e.ename||'-'}${e.ephone?' / '+e.ephone:''}</span></div>
+    </div>
+    <div style="background:#fafaf8;border-radius:10px;padding:12px 14px">
+      <div style="font-size:10px;font-weight:700;color:#8A8A98;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em">住所</div>
+      <div class="info-row"><span class="info-lbl">郵便番号</span><span>${e.zip?'〒'+e.zip:'-'}</span></div>
+      <div class="info-row"><span class="info-lbl">都道府県</span><span>${e.pref||'-'}</span></div>
+      <div class="info-row"><span class="info-lbl">市区町村</span><span>${e.city||'-'}</span></div>
+      <div class="info-row"><span class="info-lbl">番地・建物</span><span>${e.addr||'-'}</span></div>
+    </div>`;
+  document.getElementById('emp-detail').style.display='block';
+  document.getElementById('emp-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 function openEmpForm(id){editEmpId=id;document.getElementById('ef-title').textContent=id?'従業員情報編集':'新規従業員登録';document.getElementById('ef-del').style.display=id?'block':'none';document.getElementById('emp-detail').style.display='none';if(id){const e=emps.find(x=>x.id===id);['name','kana','dept','mobile','ename','ephone','zip','city','addr','pin'].forEach(f=>{document.getElementById('ef-'+f).value=e[f==='name'?'name':f==='kana'?'kana':f]==='dept'?e.dept:e[f]||'';});document.getElementById('ef-name').value=e.name;document.getElementById('ef-kana').value=e.kana||'';document.getElementById('ef-birth').value=e.birth||'';document.getElementById('ef-join').value=e.joinDate;document.getElementById('ef-dept').value=e.dept||'';document.getElementById('ef-type').value=e.type;document.getElementById('ef-start').value=e.start;document.getElementById('ef-end').value=e.end;document.getElementById('ef-break').value=e.brk;document.getElementById('ef-mobile').value=e.mobile||'';document.getElementById('ef-ename').value=e.ename||'';document.getElementById('ef-ephone').value=e.ephone||'';document.getElementById('ef-zip').value=e.zip||'';document.getElementById('ef-pref').value=e.pref||'';document.getElementById('ef-city').value=e.city||'';document.getElementById('ef-addr').value=e.addr||'';document.getElementById('ef-pin').value=e.pin||'';}else{['ef-name','ef-kana','ef-dept','ef-mobile','ef-ename','ef-ephone','ef-zip','ef-city','ef-addr','ef-pin'].forEach(i=>document.getElementById(i).value='');document.getElementById('ef-birth').value='';document.getElementById('ef-join').value=TODAYSTR;document.getElementById('ef-type').value='正社員';document.getElementById('ef-pref').value='';document.getElementById('ef-start').value='09:00';document.getElementById('ef-end').value='17:30';document.getElementById('ef-break').value=0;}togglePart();document.getElementById('emp-form').style.display='block';document.getElementById('emp-form').scrollIntoView({behavior:'smooth',block:'nearest'});}
 function closeEmpForm(){document.getElementById('emp-form').style.display='none';}
 function saveEmp(){const name=document.getElementById('ef-name').value.trim();const join=document.getElementById('ef-join').value;if(!name||!join){showMsg('ef-msg','氏名と入社日は必須です','i');return;}const pin=document.getElementById('ef-pin').value;if(!pin||!/^\d{4}$/.test(pin)){showMsg('ef-msg','パスワードは4桁の数字で入力してください','w');return;}const type=document.getElementById('ef-type').value;const d={name,kana:document.getElementById('ef-kana').value,birth:document.getElementById('ef-birth').value,joinDate:join,dept:document.getElementById('ef-dept').value,type,start:type==='パート・アルバイト'?document.getElementById('ef-start').value:WS,end:type==='パート・アルバイト'?document.getElementById('ef-end').value:WE,brk:type==='パート・アルバイト'?parseInt(document.getElementById('ef-break').value)||0:WB,mobile:document.getElementById('ef-mobile').value,ename:document.getElementById('ef-ename').value,ephone:document.getElementById('ef-ephone').value,zip:document.getElementById('ef-zip').value,pref:document.getElementById('ef-pref').value,city:document.getElementById('ef-city').value,addr:document.getElementById('ef-addr').value,pin};if(editEmpId){const i=emps.findIndex(e=>e.id===editEmpId);emps[i]={...emps[i],...d};}else{d.id=nEmpId++;emps.push(d);children[d.id]=[];lRecs[d.id]=[];}closeEmpForm();renderEmpList();syncAdminSels();saveData();}
 function delEmp(){if(!confirm('削除しますか？'))return;emps=emps.filter(e=>e.id!==editEmpId);closeEmpForm();renderEmpList();saveData();}
 
-function renderFamily(){const empId=parseInt(document.getElementById('fam-sel').value);const fc=document.getElementById('fam-content');if(!empId){fc.innerHTML='<p style="color:#8A8A98;font-size:13px">従業員を選択してください</p>';return;}const sp=spouses[empId];const chs=children[empId]||[];let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div class="act" style="margin-bottom:0">配偶者</div><button class="abtn abtn-sm ${sp?'':'abtn-p'}" onclick="openSpForm(${empId})">${sp?'編集':'+ 登録'}</button></div>`;if(sp){const age=sp.birth?getAge(sp.birth):null;html+=`<div class="spouse-box"><div style="font-size:13px;font-weight:700">${sp.name}</div><div class="info-row"><span class="info-lbl">生年月日</span><span>${sp.birth||'-'}${age!==null?' ('+age+'歳)':''}</span></div></div>`;}else html+=`<p style="font-size:12px;color:#8A8A98;padding:6px 0 9px">配偶者が登録されていません</p>`;html+=`<div class="adiv"></div><div style="display:flex;justify-content:space-between;align-items:center"><div class="act" style="margin-bottom:0">子供（${chs.length}人）</div><button class="abtn abtn-p abtn-sm" onclick="openChForm(${empId},null)">+ 追加</button></div>`;if(!chs.length)html+=`<p style="font-size:12px;color:#8A8A98;padding:4px 0">子供の登録がありません</p>`;chs.forEach(ch=>{const age=getAge(ch.birth);html+=`<div class="child-box"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700">${ch.name||'お子様'}</div><div style="font-size:11px;color:#8A8A98">${ch.birth} (${age}歳)</div></div><button class="abtn abtn-sm" onclick="openChForm(${empId},${ch.id})">編集</button></div><div class="tl-row" style="margin-top:8px">`;sEvs(ch).forEach(ev=>{html+=`<div class="tl-it" style="${ev.date<=TODAYSTR?'opacity:.45':''}"><div style="font-size:10px;color:#8A8A98">${ev.year}/${ev.month}</div><div class="tl-e abdg-p">${ev.label}</div></div>`;});html+=`</div></div>`;});fc.innerHTML=html;}
+function renderFamily(){const empId=parseInt(document.getElementById('fam-sel').value);const fc=document.getElementById('fam-content');if(!empId){fc.innerHTML='<p style="color:#8A8A98;font-size:13px">従業員を選択してください</p>';return;}const sp=spouses[empId];const chs=children[empId]||[];let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><div class="act" style="margin-bottom:0">配偶者</div><button class="abtn abtn-sm ${sp?'':'abtn-p'}" onclick="openSpForm(${empId})">${sp?'編集':'+ 登録'}</button></div>`;if(sp){const age=sp.birth?getAge(sp.birth):null;html+=`<div class="spouse-box"><div style="font-size:13px;font-weight:700">${sp.name}</div><div class="info-row"><span class="info-lbl">生年月日</span><span>${sp.birth||'-'}${age!==null?' ('+age+'歳)':''}</span></div></div>`;}else html+=`<p style="font-size:12px;color:#8A8A98;padding:6px 0 9px">配偶者が登録されていません</p>`;html+=`<div class="adiv"></div><div style="display:flex;justify-content:space-between;align-items:center"><div class="act" style="margin-bottom:0">子供（${chs.length}人）</div><button class="abtn abtn-p abtn-sm" onclick="openChForm(${empId},null)">+ 追加</button></div>`;if(!chs.length)html+=`<p style="font-size:12px;color:#8A8A98;padding:4px 0">子供の登録がありません</p>`;chs.forEach(ch=>{const age=getAge(ch.birth);html+=`<div class="child-box"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700">${ch.name||'お子様'}</div><div style="font-size:11px;color:#8A8A98">${ch.birth} (${age}歳)</div></div><button class="abtn abtn-sm" onclick="openChForm(${empId},${ch.id})">編集</button></div><div class="tl-row" style="margin-top:8px">`;sEvs(ch).forEach(ev=>{html+=`<div class="tl-it" style="${ev.date<=TODAYSTR?'opacity:.45':''}"><div style="font-size:10px;color:#8A8A98">${ev.year}/${ev.month}</div><div class="tl-e ${ev.color||'abdg-p'}">${ev.label}</div></div>`;});html+=`</div></div>`;});fc.innerHTML=html;}
 function openSpForm(empId){editSpEmpId=empId;const sp=spouses[empId];document.getElementById('sp-name').value=sp?sp.name:'';document.getElementById('sp-kana').value=sp?sp.kana:'';document.getElementById('sp-birth').value=sp?sp.birth:'';document.getElementById('sp-job').value=sp?sp.job:'';document.getElementById('sp-note').value=sp?sp.note:'';document.getElementById('sp-form-card').style.display='block';}
 function saveSpouse(){spouses[editSpEmpId]={name:document.getElementById('sp-name').value,kana:document.getElementById('sp-kana').value,birth:document.getElementById('sp-birth').value,job:document.getElementById('sp-job').value,note:document.getElementById('sp-note').value};document.getElementById('sp-form-card').style.display='none';renderFamily();renderBday();saveData();}
 function openChForm(empId,chId){editChEmpId=empId;editChId=chId;document.getElementById('cf-title').textContent=chId?'子供情報編集':'子供を追加';document.getElementById('cf-del').style.display=chId?'block':'none';if(chId){const ch=(children[empId]||[]).find(c=>c.id===chId);document.getElementById('cf-name').value=ch.name||'';document.getElementById('cf-birth').value=ch.birth;document.getElementById('cf-gender').value=ch.gender||'';document.getElementById('cf-kg').value=ch.kgAge||3;document.getElementById('cf-note').value=ch.note||'';}else{['cf-name','cf-note'].forEach(i=>document.getElementById(i).value='');document.getElementById('cf-birth').value='';document.getElementById('cf-gender').value='';document.getElementById('cf-kg').value='3';}document.getElementById('ch-form-card').style.display='block';}
@@ -1906,7 +1944,7 @@ function delChild(){if(!confirm('削除しますか？'))return;children[editChE
 
 function renderBday(){const days=parseInt(document.getElementById('bday-range').value)||90;let all=[];emps.forEach(e=>{if(e.birth)all.push({name:e.name,birth:e.birth,role:'本人'});if(spouses[e.id]&&spouses[e.id].birth)all.push({name:spouses[e.id].name,birth:spouses[e.id].birth,role:'配偶者（'+e.name+'）'});});all=all.map(p=>{const nb=nxtBday(p.birth);return{...p,next:nb,diff:dUntil(nb)};}).sort((a,b)=>a.diff-b.diff);const up=all.filter(p=>p.diff<=days);document.getElementById('bday-list').innerHTML=up.length?up.map(p=>`<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #F0EEF8"><div style="flex:1"><div style="font-size:13px;font-weight:700">${p.name}</div><div style="font-size:11px;color:#8A8A98">${p.role} · ${p.birth}</div></div><div style="font-size:12px">${p.diff===0?'<span class="abdg abdg-p">今日</span>':'<span style="color:#E07C2A;font-weight:700">'+p.diff+'日後</span>'}</div></div>`).join(''):`<p style="font-size:12px;color:#8A8A98">今後${days}日以内に誕生日の方はいません</p>`;const tb=document.getElementById('bday-all');tb.innerHTML='';all.forEach(p=>{const age=getAge(p.birth);tb.innerHTML+=`<tr><td><strong>${p.name}</strong></td><td><span class="abdg abdg-gr">${p.role}</span></td><td style="font-size:11px">${p.birth}</td><td>${age}歳</td><td style="font-size:11px">${p.next.getMonth()+1}月${p.next.getDate()}日</td><td style="font-size:11px">${p.diff===0?'<span class="abdg abdg-p">今日</span>':p.diff+'日'}</td></tr>`;});if(!all.length)tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#8A8A98">データなし</td></tr>';}
 
-function sEvs(child){const b=new Date(child.birth+'T00:00:00');const by=b.getFullYear();const kg=parseInt(child.kgAge)||3;const evs=[];const add=(y,m,l)=>evs.push({year:y,month:m,label:l,date:`${y}-${String(m).padStart(2,'0')}-01`});const kgy=by+kg+(b.getMonth()>=3?1:0);add(kgy,4,'幼稚園入園');add(kgy+3,3,'幼稚園卒園');const ey=by+6+(b.getMonth()>=3?1:0);add(ey,4,'小学校入学');add(ey+6,3,'小学校卒業');const my=ey+6;add(my,4,'中学校入学');add(my+3,3,'中学校卒業');const hy=my+3;add(hy,4,'高校入学');add(hy+3,3,'高校卒業');return evs.sort((a,b)=>a.date.localeCompare(b.date));}
+function sEvs(child){const b=new Date(child.birth+'T00:00:00');const by=b.getFullYear();const kg=parseInt(child.kgAge)||3;const evs=[];const add=(y,m,l,c)=>evs.push({year:y,month:m,label:l,color:c,date:`${y}-${String(m).padStart(2,'0')}-01`});const kgy=by+kg+(b.getMonth()>=3?1:0);add(kgy,4,'幼稚園入園','abdg-p');add(kgy+3,3,'幼稚園卒園','abdg-p');const ey=by+6+(b.getMonth()>=3?1:0);add(ey,4,'小学校入学','abdg-g');add(ey+6,3,'小学校卒業','abdg-g');const my=ey+6;add(my,4,'中学校入学','abdg-o');add(my+3,3,'中学校卒業','abdg-o');const hy=my+3;add(hy,4,'高校入学','abdg-r');add(hy+3,3,'高校卒業','abdg-r');return evs.sort((a,b)=>a.date.localeCompare(b.date));}
 function sStage(child){const evs=sEvs(child);for(let i=0;i<evs.length;i++){const ev=evs[i];const nx=evs[i+1];if(ev.date<=TODAYSTR&&(!nx||nx.date>TODAYSTR)){return ev.label.includes('入園')||ev.label.includes('入学')?ev.label.replace('入園','在園').replace('入学','在学'):'就学前';}}return TODAYSTR<(evs[0]||{}).date?'未就園':'卒業後';}
 function ageAt(birth,evDate){const b=new Date(birth+'T00:00:00');const e=new Date(evDate+'T00:00:00');let a=e.getFullYear()-b.getFullYear();if(e.getMonth()<b.getMonth()||(e.getMonth()===b.getMonth()&&e.getDate()<b.getDate()))a--;return a;}
 function renderSchool(){const empId=document.getElementById('sc-emp-sel').value;const filter=document.getElementById('sc-filter').value;const in1y=new Date(TODAY);in1y.setFullYear(in1y.getFullYear()+1);const in1yS=in1y.toISOString().split('T')[0];let rows=[];emps.forEach(emp=>{if(empId&&emp.id!=empId)return;(children[emp.id]||[]).forEach(ch=>{sEvs(ch).forEach(ev=>rows.push({emp,ch,ev}));});});rows.sort((a,b)=>a.ev.date.localeCompare(b.ev.date));if(filter==='upcoming')rows=rows.filter(r=>r.ev.date>=TODAYSTR&&r.ev.date<=in1yS);else if(filter!=='all')rows=rows.filter(r=>r.ev.year===parseInt(filter));const tb=document.getElementById('sc-table');tb.innerHTML='';if(!rows.length){tb.innerHTML='<tr><td colspan="5" style="text-align:center;color:#8A8A98">該当なし</td></tr>';return;}rows.forEach(({emp,ch,ev})=>{const past=ev.date<TODAYSTR;const near=!past&&ev.date<=in1yS;tb.innerHTML+=`<tr style="${past?'opacity:.5':''}"><td><span class="abdg abdg-p">${ev.label}</span>${near?' ★':''}</td><td style="font-size:11px">${ev.year}/${ev.month}</td><td style="font-size:11px">${emp.name}</td><td style="font-size:11px">${ch.name||'お子様'}</td><td style="font-size:11px;color:#8A8A98">${ageAt(ch.birth,ev.date)}歳</td></tr>`;});const ul=document.getElementById('sc-upcoming');ul.innerHTML='';const up=rows.filter(r=>{const d=(new Date(r.ev.date)-TODAY)/864e5;return d>=0&&d<=180;});if(!up.length){ul.innerHTML='<p style="font-size:12px;color:#8A8A98">今後6ヶ月のイベントはありません</p>';return;}up.slice(0,8).forEach(({emp,ch,ev})=>{const diff=Math.round((new Date(ev.date)-TODAY)/864e5);ul.innerHTML+=`<div style="display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #F0EEF8"><span class="abdg abdg-p">${ev.label}</span><span style="font-size:11px;flex:1">${emp.name} · ${ch.name||'お子様'}</span><span style="font-size:11px;color:#8A8A98">${ev.year}年${ev.month}月 <span style="color:#E07C2A">${diff}日後</span></span></div>`;});}
